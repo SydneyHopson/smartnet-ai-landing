@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,14 +47,24 @@ export function AiEstimatorCard({ onNextStep }: AiEstimatorCardProps) {
   return (
     <Card className="rounded-[1.6rem] border border-[#1f2937] bg-[radial-gradient(circle_at_top,rgba(31,64,171,0.9),rgba(2,6,23,1))] shadow-[0_0_70px_rgba(15,23,42,0.95)] backdrop-blur-2xl">
       <CardContent className="space-y-6 p-5 sm:p-6">
-        {/* Buddy circle + intro */}
+        {/* Buddy + intro */}
         <div className="flex flex-col items-center justify-center">
-          <div className="relative h-20 w-20">
-            <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_10%,rgba(56,189,248,0.95),rgba(15,23,42,1))] blur-[6px]" />
-            <div className="absolute inset-[4px] flex items-center justify-center rounded-full border border-sky-400/80 bg-[#020617]/90 shadow-[0_0_40px_rgba(56,189,248,1)]">
-              <div className="h-9 w-9 animate-pulse rounded-full bg-sky-300 shadow-[0_0_30px_rgba(56,189,248,1)]" />
+          <div className="relative h-24 w-24 sm:h-28 sm:w-28">
+            {/* glow field */}
+            <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_10%,rgba(56,189,248,0.95),rgba(15,23,42,1))] blur-[10px]" />
+            {/* buddy image */}
+            <div className="relative z-10 h-full w-full motion-safe:animate-[float_6s_ease-in-out_infinite]">
+              <Image
+                src="/mascot/images/mascot1.png"
+                alt="SmartNET AI Buddy"
+                fill
+                className="object-contain drop-shadow-[0_0_32px_rgba(56,189,248,0.95)]"
+              />
             </div>
+            {/* inner pulse */}
+            <div className="pointer-events-none absolute inset-[6px] rounded-full border border-sky-400/80" />
           </div>
+
           <p className="mt-3 text-[0.7rem] font-semibold tracking-wide text-sky-100">
             SmartNET AI Estimator
           </p>
