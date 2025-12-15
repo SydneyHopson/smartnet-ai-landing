@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { SmartNetEstimateProvider } from "@/components/smartNetWizard/SmartNetEstimateProvider";
 
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#020617] text-slate-50`}
       >
-        <SmartNetEstimateProvider>{children}</SmartNetEstimateProvider>
+        <Suspense fallback={null}>
+          <SmartNetEstimateProvider>{children}</SmartNetEstimateProvider>
+        </Suspense>
       </body>
     </html>
   );

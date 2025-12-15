@@ -1,3 +1,5 @@
+// File: src/app/api/magic-link/[token]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { sanityClient } from "@/lib/sanityClient"; // read client
 import { sanityWriteClient } from "@/lib/sanityWriteClient"; // ✅ write client
@@ -49,7 +51,7 @@ export async function GET(
   context: { params: Promise<{ token: string }> }
 ) {
   try {
-    // 🔑 In Next.js App Router, params can be a Promise (as you noted)
+    // 🔑 In Next.js App Router, params can be a Promise
     const { token } = await context.params;
 
     if (!token) {
@@ -75,9 +77,12 @@ export async function GET(
       restoredAt
     }`;
 
-    const doc = await sanityClient.fetch<MagicLinkSessionDoc | null>(query, {
-      token,
-    });
+    // ✅ BEST FIX: Sanity fetch typings can infer params as never/undefined.
+    // Cast params to a generic param bag to satisfy TS in strict builds.
+    const doc = await sanityClient.fetch<MagicLinkSessionDoc | null>(
+      query,
+      { token } as Record<string, unknown>
+    );
 
     if (!doc) {
       return NextResponse.json({ error: "Magic link not found" }, { status: 404 });
@@ -107,16 +112,16 @@ export async function GET(
       }
     }
 
+    // ✅ Decide what status to write back
+    const statusToWrite = isExpired ? "expired" : "redeemed";
+
     // ✅ Update access tracking + restore signals
-    // We still return the estimate even if expired, but we mark status accordingly.
-    const patchSession = sanityWriteClient
-      .patch(doc._id)
-      .set({
-        lastAccessedAt: now.toISOString(),
-        restored: true,
-        restoredAt: doc.restoredAt ?? now.toISOString(),
-        status: isExpired ? "expired" : (doc.status === "redeemed" ? "redeemed" : "redeemed"),
-      });
+    const patchSession = sanityWriteClient.patch(doc._id).set({
+      lastAccessedAt: now.toISOString(),
+      restored: true,
+      restoredAt: doc.restoredAt ?? now.toISOString(),
+      status: statusToWrite,
+    });
 
     try {
       await patchSession.commit({ autoGenerateArrayKeys: true });

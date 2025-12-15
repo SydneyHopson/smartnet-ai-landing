@@ -1,3 +1,6 @@
+// File: src/app/api/owner/clear-test-data/route.ts
+// (path name may differ in your project; use your actual file path)
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { sanityWriteClient } from "@/lib/sanityWriteClient";
@@ -10,15 +13,18 @@ const DOC_TYPES_TO_CLEAR = [
   "leadEvent",
 ] as const;
 
+// ✅ Next 16 cookies() is async; this type represents the resolved cookie jar
+type CookieJar = Awaited<ReturnType<typeof cookies>>;
+
 // ✅ simple “owner auth” gate (uses the same cookie you already rely on)
 // If your cookie name is different, change it here.
-function requireOwner(reqCookies: ReturnType<typeof cookies>) {
+function requireOwner(reqCookies: CookieJar) {
   const token =
     reqCookies.get("owner_session")?.value ||
     reqCookies.get("smartnet_owner")?.value ||
     reqCookies.get("owner")?.value;
 
-  return Boolean(token);
+  return Boolean(token && token.trim());
 }
 
 export async function DELETE(req: Request) {
@@ -32,7 +38,7 @@ export async function DELETE(req: Request) {
     }
 
     // ✅ Auth lock (ties into your existing owner login cookie)
-    const reqCookies = cookies();
+    const reqCookies = await cookies();
     if (!requireOwner(reqCookies)) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized." },
@@ -58,7 +64,7 @@ export async function DELETE(req: Request) {
     // - OR email/name contains "test"
     // - OR email contains "example.com"
     // - OR phone includes "555"
-    // - OR created in last 14 days (keeps it from deleting ancient real stuff)
+    // - AND created in last 14 days (keeps it from deleting ancient real stuff)
     const groq = `
       *[
         _type in $types
@@ -89,9 +95,9 @@ export async function DELETE(req: Request) {
 
     // ✅ Delete in a transaction
     let tx = sanityWriteClient.transaction();
-    ids.forEach((id) => {
+    for (const id of ids) {
       tx = tx.delete(id);
-    });
+    }
     await tx.commit();
 
     return NextResponse.json({ ok: true, deleted: ids.length, ids });
