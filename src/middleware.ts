@@ -1,3 +1,4 @@
+// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -8,6 +9,13 @@ export function middleware(req: NextRequest) {
 
   const isOwnerPage = pathname.startsWith("/owner");
   const isOwnerApi = pathname.startsWith("/api/owner");
+
+  // ✅ If someone hits exactly /owner, send them somewhere real
+  if (pathname === "/owner") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/owner/dashboard";
+    return NextResponse.redirect(url);
+  }
 
   // Only protect owner pages + owner APIs
   if (!isOwnerPage && !isOwnerApi) return NextResponse.next();
@@ -38,5 +46,6 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/owner/:path*", "/api/owner/:path*"],
+  // ✅ include bare /owner + bare /api/owner too
+  matcher: ["/owner", "/owner/:path*", "/api/owner", "/api/owner/:path*"],
 };
