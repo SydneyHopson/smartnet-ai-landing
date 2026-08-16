@@ -677,7 +677,7 @@ function KnownDetails() {
   }
 
   if (wifiUsers) {
-    details.push(`${wifiUsers} Wi-Fi devices`);
+    details.push(`${wifiUsers} concurrent Wi-Fi devices`);
   }
 
   if (doors) {
@@ -820,23 +820,15 @@ function EstimatorError({
   );
 }
 
-function getSetupProgress(step: SetupStep): number {
-  switch (step) {
-    case "property":
-      return 20;
-    case "business":
-      return 40;
-    case "systems":
-      return 65;
-    case "description":
-      return 90;
-    default:
-      return 0;
-  }
-}
-
-function formatLabel(value: string): string {
+function formatLabel(value: string) {
   return value
     .replace(/_/g, " ")
     .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function getSetupProgress(step: SetupStep) {
+  if (step === "property") return 25;
+  if (step === "business") return 50;
+  if (step === "systems") return 75;
+  return 100;
 }
