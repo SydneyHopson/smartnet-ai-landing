@@ -38,7 +38,13 @@ export function calculateEstimate(project: ProjectEstimate): ProjectEstimate {
   addCablingScope(calculatedProject, accumulator);
   addRackScope(calculatedProject, accumulator);
 
-  const baseLaborHours = accumulator.laborHours;
+  // Catalog labor covers installation at each physical item. Residential jobs
+  // also need real non-BOM time for layout, staging, controller/NVR/network
+  // configuration, commissioning, testing, cleanup and customer handoff.
+  // Keep this residential-only for now so the already-calibrated commercial
+  // benchmark tiers are not silently inflated.
+  const projectLaborHours = calculateResidentialProjectLaborHours(calculatedProject);
+  const baseLaborHours = accumulator.laborHours + projectLaborHours;
   const complexityMultiplier = calculateLaborComplexityMultiplier(calculatedProject);
   const adjustedLaborHours = baseLaborHours * complexityMultiplier;
   const laborRate = getCatalogItem("labor").unitCost;
@@ -80,7 +86,7 @@ export function calculateEstimate(project: ProjectEstimate): ProjectEstimate {
     estimatedLow: roundToFriendlyPrice(targetSellPrice * lowFactor),
     estimatedHigh: roundToFriendlyPrice(targetSellPrice * highFactor),
     targetMarginPercent,
-    catalogVersion: "smartnet-catalog-2.2.0-hybrid",
+    catalogVersion: "smartnet-catalog-2.3.0-residential-labor",
   };
 
   calculatedProject.installation.estimatedLaborHours = { value: roundQuantity(adjustedLaborHours), confidence: "ai_inferred" };
@@ -94,6 +100,37 @@ function isResidential(project: ProjectEstimate): boolean {
   return project.property.projectType === "residential";
 }
 
+function calculateResidentialProjectLaborHours(project: ProjectEstimate): number {
+  if (!isResidential(project)) return 0;
+
+  const cameraCount = getCameraCount(project);
+  const apCount = project.wifi.estimatedAccessPointCount.value ?? 0;
+  const doorCount = project.accessControl.controlledDoorCount.value ?? 0;
+  const activeSystems = [
+    project.cameras.requested,
+    project.wifi.requested,
+    project.network.requested,
+    project.accessControl.requested,
+  ].filter(Boolean).length;
+
+  if (cameraCount + apCount + doorCount === 0 && activeSystems === 0) return 0;
+
+  // Minimum project setup/closeout. Additional commissioning grows with the
+  // number of systems and electronically controlled doors, where programming,
+  // alignment and functional testing consume meaningful technician time.
+  let hours = 2.25;
+  hours += Math.max(0, activeSystems - 1) * 0.65;
+  hours += cameraCount * 0.08;
+  hours += apCount * 0.18;
+  hours += doorCount * 0.45;
+
+  if (project.network.rackRequired === true) hours += 0.75;
+  if (project.cabling.wiringStyle === "hidden") hours += 0.75;
+  if ((project.property.numberOfFloors.value ?? 1) > 1) hours += 0.5;
+
+  return Math.min(8, hours);
+}
+
 function addCameraScope(project: ProjectEstimate, accumulator: PricingAccumulator): void {
   if (!project.cameras.requested) return;
   const interiorCount = project.cameras.interiorCount.value ?? 0;
@@ -101,9 +138,6 @@ function addCameraScope(project: ProjectEstimate, accumulator: PricingAccumulato
   const specialtyCount = project.cameras.specialtyCount.value ?? 0;
   const residential = isResidential(project);
 
-  // Home projects use a balanced BOM: value cameras for ordinary coverage,
-  // while specialty cameras remain premium. Commercial keeps the premium
-  // UniFi baseline. Final proposal can upgrade any residential camera.
   addCatalogItem(accumulator, residential ? "camera-residential-dome" : "camera-dome", interiorCount, residential ? "Residential value camera allowance for normal indoor coverage; premium upgrade remains available." : "Indoor camera quantity from project discovery.");
   addCatalogItem(accumulator, residential ? "camera-residential-value" : "camera-standard", exteriorCount, residential ? "Residential value PoE camera allowance for normal exterior coverage; premium upgrade remains available." : "Exterior camera quantity from project discovery.");
   addCatalogItem(accumulator, "camera-specialty", specialtyCount, "Specialty-camera allowance pending final model selection.");
