@@ -33,9 +33,7 @@ export async function extractEstimatorResponse({
   currentQuestion,
   remainingQuestions,
 }: AzureEstimatorExtractionInput): Promise<AzureEstimatorExtraction> {
-  if (!azureDeployment) {
-    throw new Error("AZURE_OPENAI_DEPLOYMENT is not configured.");
-  }
+  if (!azureDeployment) throw new Error("AZURE_OPENAI_DEPLOYMENT is not configured.");
 
   const client = getAzureOpenAI();
   const completion = await client.chat.completions.create({
@@ -79,6 +77,7 @@ SEMANTIC EXTRACTION RULES
 - "fully finished", "finished home", "existing finished home" => property.constructionType=existing_finished.
 - "drywall ceilings" => property.ceilingType=drywall.
 - Extract square footage, floor count, and ceiling height whenever explicitly stated.
+- If the customer gives a total camera count without saying indoor vs outdoor, store it as cameras.interiorCount only when the context is clearly indoor; otherwise use cameras.exteriorCount only when clearly outdoor. Do not split a total count by guessing.
 - If the customer gives separate indoor and outdoor camera counts, extract both and extract named camera coverage areas.
 - "30 days of recording" => cameras.recordingDays=30.
 - "throughout the home", "throughout both floors", "whole house", "whole home" => wifi.coverageGoals includes "whole-home coverage" and wifi.indoorCoverage=true.
@@ -86,7 +85,7 @@ SEMANTIC EXTRACTION RULES
 - If both indoor whole-home and outdoor coverage are requested, include both in coverageGoals. This MUST resolve wifi.coverageGoals.
 - "20 devices at the same time" => wifi.estimatedConcurrentUsers=20.
 - Existing internet/router wording => network.existingRouter=true when clearly stated.
-- "no rack", "no network rack" => network.existingRack=false.
+- "no rack", "no network rack", "no new rack" => network.rackRequired=false. If the customer says an existing rack/cabinet is available, network.existingRack=true.
 - "provide a rack/cabinet" => network.rackRequired=true.
 - "attic access", "crawlspace", "basement", "accessible ceiling" => add those to cabling.pathwayType.
 - "some existing network cabling may be reusable" => cabling.existingCablingAvailable=true.
@@ -95,6 +94,8 @@ SEMANTIC EXTRACTION RULES
 - "normal ladder access", "no lift required" => installation.liftRequired=false and installation.ladderAccessPossible=true.
 - "mobile phone access", "phone access", "key fobs", "badges", "PIN" => extract accessControl.credentialTypes.
 - "2 exterior doors" for access control => controlledDoorCount=2 and exteriorDoorCount=2.
+- When the customer explicitly says they do not need access control, set accessControl.requested=false and do not populate access-control detail fields.
+- When the customer explicitly says they do not need a new rack, do not infer rackRequired=true merely because network scope exists.
 
 EXAMPLE
 Customer: "I have a 2-story 2,800-square-foot single-family home that is fully finished with standard 9-foot drywall ceilings. I want 4 outdoor cameras and 2 indoor cameras with 30 days recording. I want Wi-Fi throughout both floors and the backyard for about 20 devices at the same time. I want mobile phone access and key fobs on 2 exterior doors. I have internet and a router but no network rack and want a small rack. There is attic access, some existing network cabling may be reusable, wiring should be concealed, no underground runs, and normal ladder access is enough with no lift."
@@ -103,16 +104,7 @@ Result projectUpdates must include residential, 2800 sqft, 2 floors, existing_fi
       },
       {
         role: "user",
-        content: JSON.stringify(
-          {
-            currentQuestion,
-            customerMessage,
-            remainingQuestionKeys: remainingQuestions,
-            currentProject: project,
-          },
-          null,
-          2
-        ),
+        content: JSON.stringify({ currentQuestion, customerMessage, remainingQuestionKeys: remainingQuestions, currentProject: project }, null, 2),
       },
     ],
   });
@@ -121,11 +113,7 @@ Result projectUpdates must include residential, 2800 sqft, 2 floors, existing_fi
   if (!content) throw new Error("Azure OpenAI returned an empty response.");
 
   let raw: unknown;
-  try {
-    raw = JSON.parse(content);
-  } catch {
-    throw new Error("Azure OpenAI returned invalid JSON.");
-  }
+  try { raw = JSON.parse(content); } catch { throw new Error("Azure OpenAI returned invalid JSON."); }
 
   const normalized = normalizeExtraction(raw);
   const parsed = extractionSchema.parse(normalized);
@@ -134,64 +122,69 @@ Result projectUpdates must include residential, 2800 sqft, 2 floors, existing_fi
   return {
     confidence: parsed.confidence,
     explanation: parsed.explanation,
-    projectUpdates: projectEstimatePatchSchema.parse(
-      normalizeProjectPatchValues(sanitized)
-    ),
+    projectUpdates: projectEstimatePatchSchema.parse(normalizeProjectPatchValues(sanitized)),
   };
 }
 
 function normalizeExtraction(raw: unknown): unknown {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return raw;
   const response = { ...raw } as Record<string, unknown>;
+  const updates = response.projectUpdates;
+  if (typeof updates === "object" && updates !== null && !Array.isArray(updates)) {
+    normalizeLooseEnums(updates as Record<string, unknown>);
+  }
   response.projectUpdates = normalizeProjectPatchValues(response.projectUpdates);
   return response;
 }
 
-function sanitizeProjectUpdates(
-  current: ProjectEstimate,
-  incoming: ProjectEstimatePatch
-): ProjectEstimatePatch {
-  const safe: ProjectEstimatePatch = {
-    ...incoming,
-    id: undefined,
-    status: undefined,
-    equipment: undefined,
-    pricing: undefined,
-    assessment: undefined,
-    metadata: undefined,
-  };
+function normalizeLooseEnums(projectUpdates: Record<string, unknown>): void {
+  normalizeLooseEnumField(projectUpdates, "property", "projectType", ["residential","office","retail","restaurant","warehouse","industrial","medical","education","hospitality","religious","datacenter","multi_location","other"], {
+    "data center": "datacenter", "data-center": "datacenter", "multi location": "multi_location", home: "residential", house: "residential",
+  });
+  normalizeLooseEnumField(projectUpdates, "property", "constructionType", ["existing_finished","existing_unfinished","new_construction","renovation","unknown"], {
+    "existing finished": "existing_finished", "finished": "existing_finished", "existing building": "existing_finished", "new construction": "new_construction", "existing unfinished": "existing_unfinished",
+  });
+  normalizeLooseEnumField(projectUpdates, "property", "ceilingType", ["drywall","drop_ceiling","open_ceiling","warehouse_deck","mixed","unknown"], {
+    "drop ceiling": "drop_ceiling", "open ceiling": "open_ceiling", "warehouse deck": "warehouse_deck", "metal deck": "warehouse_deck", "exposed ceiling": "open_ceiling",
+  });
+  normalizeLooseEnumField(projectUpdates, "cabling", "wiringStyle", ["hidden","exposed","mixed","unknown"], {
+    concealed: "hidden", "concealed wiring": "hidden", "surface mounted": "exposed", "surface-mounted": "exposed", combination: "mixed",
+  });
+  normalizeLooseEnumField(projectUpdates, "cabling", "preferredCableType", ["cat6","cat6a","fiber","mixed","unknown"], {
+    "cat 6": "cat6", "cat-6": "cat6", "category 6": "cat6", "category6": "cat6", "cat 6a": "cat6a", "cat-6a": "cat6a", "category 6a": "cat6a", "fiber optic": "fiber", "fibre": "fiber", "copper and fiber": "mixed", "cat6 and fiber": "mixed",
+  });
+  normalizeLooseEnumField(projectUpdates, "installation", "difficultyLevel", ["standard","moderate","difficult","specialty","unknown"], {
+    normal: "standard", typical: "standard", medium: "moderate", hard: "difficult", specialized: "specialty",
+  });
+}
 
-  cleanSection(safe.customerIntent);
-  cleanSection(safe.property);
-  cleanSection(safe.cameras);
-  cleanSection(safe.network);
-  cleanSection(safe.wifi);
-  cleanSection(safe.accessControl);
-  cleanSection(safe.cabling);
-  cleanSection(safe.installation);
+function normalizeLooseEnumField(
+  root: Record<string, unknown>, sectionName: string, fieldName: string, allowed: string[], aliases: Record<string, string>
+): void {
+  const section = root[sectionName];
+  if (typeof section !== "object" || section === null || Array.isArray(section)) return;
+  const record = section as Record<string, unknown>;
+  const value = record[fieldName];
+  if (typeof value !== "string") return;
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, " ");
+  const direct = normalized.replace(/[\s-]+/g, "_");
+  if (allowed.includes(direct)) { record[fieldName] = direct; return; }
+  const alias = aliases[normalized] ?? aliases[direct];
+  if (alias && allowed.includes(alias)) { record[fieldName] = alias; return; }
+  // Unknown free-form AI text should never crash extraction. Drop the field and let
+  // the deterministic question planner ask the customer instead.
+  delete record[fieldName];
+}
 
-  preserveKnownEnum(safe.property, current.property, "constructionType", "unknown");
-  preserveKnownEnum(safe.property, current.property, "ceilingType", "unknown");
-  preserveKnownEnum(safe.cabling, current.cabling, "preferredCableType", "unknown");
-  preserveKnownEnum(safe.cabling, current.cabling, "wiringStyle", "unknown");
-  preserveKnownEnum(safe.installation, current.installation, "difficultyLevel", "unknown");
-
-  preserveRequested(current.cameras.requested, safe.cameras);
-  preserveRequested(current.network.requested, safe.network);
-  preserveRequested(current.wifi.requested, safe.wifi);
-  preserveRequested(current.accessControl.requested, safe.accessControl);
-
+function sanitizeProjectUpdates(current: ProjectEstimate, incoming: ProjectEstimatePatch): ProjectEstimatePatch {
+  const safe: ProjectEstimatePatch = { ...incoming, id: undefined, status: undefined, equipment: undefined, pricing: undefined, assessment: undefined, metadata: undefined };
+  cleanSection(safe.customerIntent); cleanSection(safe.property); cleanSection(safe.cameras); cleanSection(safe.network); cleanSection(safe.wifi); cleanSection(safe.accessControl); cleanSection(safe.cabling); cleanSection(safe.installation);
+  preserveKnownEnum(safe.property, current.property, "constructionType", "unknown"); preserveKnownEnum(safe.property, current.property, "ceilingType", "unknown"); preserveKnownEnum(safe.cabling, current.cabling, "preferredCableType", "unknown"); preserveKnownEnum(safe.cabling, current.cabling, "wiringStyle", "unknown"); preserveKnownEnum(safe.installation, current.installation, "difficultyLevel", "unknown");
+  preserveRequested(current.cameras.requested, safe.cameras); preserveRequested(current.network.requested, safe.network); preserveRequested(current.wifi.requested, safe.wifi); preserveRequested(current.accessControl.requested, safe.accessControl);
   removeInvalidQuantities(safe);
-
   if (safe.cameras && hasUsefulValue(safe.cameras)) safe.cameras.requested = true;
-  if (safe.wifi && hasUsefulValue(safe.wifi)) {
-    safe.wifi.requested = true;
-    safe.network = { ...safe.network, requested: true };
-  }
-  if (safe.accessControl && hasUsefulValue(safe.accessControl)) {
-    safe.accessControl.requested = true;
-  }
-
+  if (safe.wifi && hasUsefulValue(safe.wifi)) { safe.wifi.requested = true; safe.network = { ...safe.network, requested: true }; }
+  if (safe.accessControl && hasUsefulValue(safe.accessControl)) safe.accessControl.requested = true;
   removeEmptySections(safe);
   return safe;
 }
@@ -200,97 +193,32 @@ function cleanSection(section: object | undefined): void {
   if (!section) return;
   const record = section as Record<string, unknown>;
   for (const [key, value] of Object.entries(record)) {
-    if (value === null || value === undefined || value === "") {
-      delete record[key];
-      continue;
-    }
+    if (value === null || value === undefined || value === "") { delete record[key]; continue; }
     if (Array.isArray(value) && value.length === 0) delete record[key];
   }
 }
 
-function preserveRequested(
-  currentlyRequested: boolean,
-  section: { requested?: boolean } | undefined
-): void {
+function preserveRequested(currentlyRequested: boolean, section: { requested?: boolean } | undefined): void {
   if (currentlyRequested && section?.requested === false) section.requested = undefined;
 }
-
-function preserveKnownEnum(
-  incoming: object | undefined,
-  current: object,
-  key: string,
-  unknownValue: string
-): void {
-  if (!incoming) return;
-  const next = incoming as Record<string, unknown>;
-  const previous = current as unknown as Record<string, unknown>;
+function preserveKnownEnum(incoming: object | undefined, current: object, key: string, unknownValue: string): void {
+  if (!incoming) return; const next = incoming as Record<string, unknown>; const previous = current as unknown as Record<string, unknown>;
   if (next[key] === unknownValue && previous[key] !== unknownValue) delete next[key];
 }
-
 function removeInvalidQuantities(patch: ProjectEstimatePatch): void {
   const fields: Array<[object | undefined, string]> = [
-    [patch.property, "squareFootage"],
-    [patch.property, "numberOfFloors"],
-    [patch.property, "ceilingHeightFeet"],
-    [patch.cameras, "interiorCount"],
-    [patch.cameras, "exteriorCount"],
-    [patch.cameras, "specialtyCount"],
-    [patch.cameras, "recordingDays"],
-    [patch.network, "currentDownloadMbps"],
-    [patch.network, "currentUploadMbps"],
-    [patch.wifi, "estimatedAccessPointCount"],
-    [patch.wifi, "estimatedConcurrentUsers"],
-    [patch.accessControl, "controlledDoorCount"],
-    [patch.accessControl, "exteriorDoorCount"],
-    [patch.accessControl, "interiorDoorCount"],
-    [patch.cabling, "estimatedCableFeet"],
-    [patch.installation, "travelMiles"],
-    [patch.installation, "estimatedCrewSize"],
-    [patch.installation, "estimatedLaborHours"],
-    [patch.installation, "estimatedDurationDays"],
+    [patch.property, "squareFootage"],[patch.property, "numberOfFloors"],[patch.property, "ceilingHeightFeet"],[patch.cameras, "interiorCount"],[patch.cameras, "exteriorCount"],[patch.cameras, "specialtyCount"],[patch.cameras, "recordingDays"],[patch.network, "currentDownloadMbps"],[patch.network, "currentUploadMbps"],[patch.wifi, "estimatedAccessPointCount"],[patch.wifi, "estimatedConcurrentUsers"],[patch.accessControl, "controlledDoorCount"],[patch.accessControl, "exteriorDoorCount"],[patch.accessControl, "interiorDoorCount"],[patch.cabling, "estimatedCableFeet"],[patch.installation, "travelMiles"],[patch.installation, "estimatedCrewSize"],[patch.installation, "estimatedLaborHours"],[patch.installation, "estimatedDurationDays"],
   ];
-
   for (const [section, key] of fields) {
-    if (!section) continue;
-    const record = section as Record<string, unknown>;
-    const quantity = record[key] as { value?: unknown } | undefined;
-    if (!quantity) continue;
-    if (
-      typeof quantity.value !== "number" ||
-      !Number.isFinite(quantity.value) ||
-      quantity.value < 0
-    ) {
-      delete record[key];
-    }
+    if (!section) continue; const record = section as Record<string, unknown>; const quantity = record[key] as { value?: unknown } | undefined; if (!quantity) continue;
+    if (typeof quantity.value !== "number" || !Number.isFinite(quantity.value) || quantity.value < 0) delete record[key];
   }
 }
-
 function hasUsefulValue(section: object): boolean {
-  return Object.entries(section as Record<string, unknown>).some(
-    ([key, value]) =>
-      key !== "requested" &&
-      value !== undefined &&
-      value !== null &&
-      (!Array.isArray(value) || value.length > 0)
-  );
+  return Object.entries(section as Record<string, unknown>).some(([key, value]) => key !== "requested" && value !== undefined && value !== null && value !== "" && (!Array.isArray(value) || value.length > 0));
 }
-
 function removeEmptySections(patch: ProjectEstimatePatch): void {
-  const record = patch as Record<string, unknown>;
-  for (const name of [
-    "customerIntent",
-    "property",
-    "cameras",
-    "network",
-    "wifi",
-    "accessControl",
-    "cabling",
-    "installation",
-  ]) {
-    const section = record[name];
-    if (typeof section !== "object" || section === null || Array.isArray(section)) continue;
-    if (Object.values(section).every((value) => value === undefined || value === null)) {
-      delete record[name];
-    }
+  for (const key of ["customerIntent","property","cameras","network","wifi","accessControl","cabling","installation"] as const) {
+    const section = patch[key]; if (!section) continue; if (!hasUsefulValue(section) && !("requested" in section && typeof (section as { requested?: unknown }).requested === "boolean")) delete patch[key];
   }
 }
