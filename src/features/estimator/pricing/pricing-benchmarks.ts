@@ -37,7 +37,7 @@ const datacenter = base("datacenter", 50000, 1, "open_ceiling", 20); cameras(dat
 export const pricingBenchmarks: PricingBenchmark[] = [
   { name: "Residential lean camera + Wi-Fi", projectType: "residential", project: homeLean, expected: { minSell: 3000, maxSell: 6500, minLaborHours: 18, maxLaborHours: 35, minMaterial: 1400, maxMaterial: 3000 } },
   { name: "Residential whole-home hybrid", projectType: "residential", project: home, expected: { minSell: 6500, maxSell: 10500, minLaborHours: 32, maxLaborHours: 45, minMaterial: 2500, maxMaterial: 4000 } },
-  { name: "Restaurant lean camera + Wi-Fi", projectType: "restaurant", project: restaurantLean, expected: { minSell: 4000, maxSell: 8500, minLaborHours: 25, maxLaborHours: 60, minMaterial: 2000, maxMaterial: 5000 } },
+  { name: "Restaurant lean camera + Wi-Fi", projectType: "restaurant", project: restaurantLean, expected: { minSell: 4000, maxSell: 6500, minLaborHours: 16, maxLaborHours: 32, minMaterial: 2000, maxMaterial: 3500 } },
   { name: "Operating restaurant full systems", projectType: "restaurant", project: restaurant, expected: { minSell: 12000, maxSell: 26000, minLaborHours: 55, maxLaborHours: 105, minMaterial: 5000, maxMaterial: 10000 } },
   { name: "Two-floor office", projectType: "office", project: office, expected: { minSell: 14000, maxSell: 30000, minLaborHours: 60, maxLaborHours: 120, minMaterial: 6000, maxMaterial: 12000 } },
   { name: "Retail store", projectType: "retail", project: retail, expected: { minSell: 12000, maxSell: 26000, minLaborHours: 50, maxLaborHours: 105, minMaterial: 5000, maxMaterial: 10000 } },
