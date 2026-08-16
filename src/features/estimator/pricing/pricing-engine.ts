@@ -17,13 +17,28 @@ type PricingAccumulator = {
   recommendedItems: RecommendedItem[];
 };
 
+const PROJECT_RUN_FEET: Record<string, number> = {
+  residential: 95,
+  office: 120,
+  retail: 110,
+  restaurant: 125,
+  warehouse: 180,
+  industrial: 200,
+  medical: 125,
+  education: 150,
+  hospitality: 140,
+  religious: 160,
+  datacenter: 120,
+  multi_location: 145,
+  other: 130,
+};
+
 export function calculateEstimate(
   project: ProjectEstimate
 ): ProjectEstimate {
-  const calculatedProject =
-    projectEstimateSchema.parse(
-      structuredClone(project)
-    );
+  const calculatedProject = projectEstimateSchema.parse(
+    structuredClone(project)
+  );
 
   const accumulator: PricingAccumulator = {
     materialCost: 0,
@@ -31,55 +46,35 @@ export function calculateEstimate(
     recommendedItems: [],
   };
 
-  addCameraScope(
-    calculatedProject,
-    accumulator
+  addCameraScope(calculatedProject, accumulator);
+  addWifiScope(calculatedProject, accumulator);
+  addAccessControlScope(calculatedProject, accumulator);
+  addNetworkScope(calculatedProject, accumulator);
+  addCablingScope(calculatedProject, accumulator);
+  addRackScope(calculatedProject, accumulator);
+
+  const baseLaborHours = accumulator.laborHours;
+  const complexityMultiplier = calculateLaborComplexityMultiplier(
+    calculatedProject
   );
+  const adjustedLaborHours = baseLaborHours * complexityMultiplier;
+  const laborRate = getCatalogItem("labor").unitCost;
+  const laborCost = adjustedLaborHours * laborRate;
 
-  addWifiScope(
-    calculatedProject,
-    accumulator
+  const equipmentRentalCost = calculateEquipmentRentalCost(
+    calculatedProject
   );
+  const travelCost = calculateTravelCost(calculatedProject);
+  const permitCost = calculatedProject.installation.permitsRequired
+    ? 250
+    : 0;
 
-  addAccessControlScope(
-    calculatedProject,
-    accumulator
+  const projectConsumables = calculateProjectConsumables(
+    accumulator.materialCost,
+    calculatedProject
   );
-
-  addCablingScope(
-    calculatedProject,
-    accumulator
-  );
-
-  addRackScope(
-    calculatedProject,
-    accumulator
-  );
-
-  const laborRate =
-    getCatalogItem("labor").unitCost;
-
-  const laborCost =
-    accumulator.laborHours *
-    laborRate;
-
-  const equipmentRentalCost =
-    calculateEquipmentRentalCost(
-      calculatedProject
-    );
-
-  const travelCost =
-    calculateTravelCost(
-      calculatedProject
-    );
-
-  const permitCost =
-    calculatedProject.installation
-      .permitsRequired
-      ? 250
-      : 0;
-
-  const otherCost = 0;
+  const mobilizationCost = calculateMobilizationCost(calculatedProject);
+  const otherCost = projectConsumables + mobilizationCost;
 
   const directCost =
     accumulator.materialCost +
@@ -89,149 +84,105 @@ export function calculateEstimate(
     permitCost +
     otherCost;
 
-  const overheadAmount =
-    directCost * 0.15;
+  const overheadPercent = 0.12;
+  const overheadAmount = directCost * overheadPercent;
+  const costWithOverhead = directCost + overheadAmount;
 
-  const costWithOverhead =
-    directCost +
-    overheadAmount;
+  const targetMarginPercent = determineTargetMarginPercent(
+    calculatedProject,
+    directCost
+  );
+  const marginDecimal = targetMarginPercent / 100;
+  const targetSellPrice = costWithOverhead / (1 - marginDecimal);
+  const markupAmount = targetSellPrice - costWithOverhead;
 
-  const targetMarginPercent = 25;
-
-  const targetMarginDecimal =
-    targetMarginPercent / 100;
-
-  const targetSellPrice =
-    targetMarginDecimal >= 1
-      ? costWithOverhead
-      : costWithOverhead /
-        (1 - targetMarginDecimal);
-
-  const markupAmount =
-    targetSellPrice -
-    costWithOverhead;
+  const uncertainty = calculateEstimateUncertainty(calculatedProject);
+  const lowFactor = 1 - uncertainty;
+  const highFactor = 1 + uncertainty;
 
   calculatedProject.equipment.recommendedItems =
     accumulator.recommendedItems;
 
   calculatedProject.pricing = {
     ...calculatedProject.pricing,
-
     status: "preliminary",
-
-    materialCost:
-      roundCurrency(
-        accumulator.materialCost
-      ),
-
-    laborCost:
-      roundCurrency(laborCost),
-
-    equipmentRentalCost:
-      roundCurrency(
-        equipmentRentalCost
-      ),
-
-    travelCost:
-      roundCurrency(travelCost),
-
-    permitCost:
-      roundCurrency(permitCost),
-
-    otherCost:
-      roundCurrency(otherCost),
-
-    directCost:
-      roundCurrency(directCost),
-
-    overheadAmount:
-      roundCurrency(
-        overheadAmount
-      ),
-
-    markupAmount:
-      roundCurrency(markupAmount),
-
-    estimatedLow:
-      roundCurrency(
-        targetSellPrice * 0.9
-      ),
-
-    estimatedHigh:
-      roundCurrency(
-        targetSellPrice * 1.1
-      ),
-
+    materialCost: roundCurrency(accumulator.materialCost),
+    laborCost: roundCurrency(laborCost),
+    equipmentRentalCost: roundCurrency(equipmentRentalCost),
+    travelCost: roundCurrency(travelCost),
+    permitCost: roundCurrency(permitCost),
+    otherCost: roundCurrency(otherCost),
+    directCost: roundCurrency(directCost),
+    overheadAmount: roundCurrency(overheadAmount),
+    markupAmount: roundCurrency(markupAmount),
+    estimatedLow: roundToFriendlyPrice(targetSellPrice * lowFactor),
+    estimatedHigh: roundToFriendlyPrice(targetSellPrice * highFactor),
     targetMarginPercent,
-
-    catalogVersion:
-      "smartnet-catalog-1.0.0",
+    catalogVersion: "smartnet-catalog-2.0.0",
   };
 
-  calculatedProject.installation
-    .estimatedLaborHours = {
-    value:
-      roundQuantity(
-        accumulator.laborHours
-      ),
-
-    confidence:
-      "ai_inferred",
+  calculatedProject.installation.estimatedLaborHours = {
+    value: roundQuantity(adjustedLaborHours),
+    confidence: "ai_inferred",
   };
 
-  calculatedProject.status =
-    "ready_for_pricing";
+  calculatedProject.installation.estimatedCrewSize = {
+    value: inferCrewSize(adjustedLaborHours, calculatedProject),
+    confidence: "ai_inferred",
+  };
 
-  return projectEstimateSchema.parse(
-    calculatedProject
-  );
+  calculatedProject.installation.estimatedDurationDays = {
+    value: inferDurationDays(adjustedLaborHours, calculatedProject),
+    confidence: "ai_inferred",
+  };
+
+  calculatedProject.status = "ready_for_pricing";
+
+  return projectEstimateSchema.parse(calculatedProject);
 }
 
 function addCameraScope(
   project: ProjectEstimate,
   accumulator: PricingAccumulator
 ): void {
-  if (!project.cameras.requested) {
-    return;
-  }
+  if (!project.cameras.requested) return;
 
-  const interiorCount =
-    project.cameras.interiorCount
-      .value ?? 0;
-
-  const exteriorCount =
-    project.cameras.exteriorCount
-      .value ?? 0;
-
-  const specialtyCount =
-    project.cameras.specialtyCount
-      .value ?? 0;
-
-  const standardCameraCount =
-    interiorCount +
-    exteriorCount;
+  const interiorCount = project.cameras.interiorCount.value ?? 0;
+  const exteriorCount = project.cameras.exteriorCount.value ?? 0;
+  const specialtyCount = project.cameras.specialtyCount.value ?? 0;
 
   addCatalogItem(
     accumulator,
-    "camera-standard",
-    standardCameraCount,
-    "Camera quantity provided during project discovery."
+    "camera-dome",
+    interiorCount,
+    "Indoor camera quantity from project discovery."
   );
 
   addCatalogItem(
     accumulator,
     "camera-standard",
+    exteriorCount,
+    "Exterior camera quantity from project discovery."
+  );
+
+  addCatalogItem(
+    accumulator,
+    "camera-specialty",
     specialtyCount,
-    "Specialty camera allowance pending final model selection."
+    "Specialty-camera allowance pending final model selection."
   );
 
-  const totalCameraCount =
-    standardCameraCount +
-    specialtyCount;
-
-  if (totalCameraCount <= 0) {
-    return;
+  if (exteriorCount + specialtyCount > 0) {
+    addCatalogItem(
+      accumulator,
+      "camera-junction-box",
+      exteriorCount + specialtyCount,
+      "Weatherproof mounting allowance for exterior and specialty cameras."
+    );
   }
+
+  const totalCameraCount = interiorCount + exteriorCount + specialtyCount;
+  if (totalCameraCount <= 0) return;
 
   addCatalogItem(
     accumulator,
@@ -240,28 +191,32 @@ function addCameraScope(
     "Recorder required for the proposed camera system."
   );
 
-  const switchCount =
-    Math.max(
-      1,
-      Math.ceil(
-        totalCameraCount / 40
-      )
-    );
+  const recordingDays = Math.max(
+    14,
+    project.cameras.recordingDays.value ?? 30
+  );
+
+  // Conservative preliminary storage model: roughly one 8TB drive per
+  // 8 standard cameras for ~30 days, scaled by requested retention.
+  const storageDrives = Math.max(
+    1,
+    Math.ceil((totalCameraCount / 8) * (recordingDays / 30))
+  );
 
   addCatalogItem(
     accumulator,
-    totalCameraCount > 20
-      ? "switch-48"
-      : "switch-24",
-    switchCount,
-    "PoE switching required for cameras and connected devices."
+    "storage-8tb",
+    storageDrives,
+    `Storage allowance based on ${totalCameraCount} cameras and approximately ${recordingDays} days of retention.`
   );
+
+  addPoESwitching(accumulator, totalCameraCount, project);
 
   addCatalogItem(
     accumulator,
     "ups",
     1,
-    "Battery backup recommended for recording and network equipment."
+    "Battery backup allowance for recording and network equipment."
   );
 }
 
@@ -269,55 +224,48 @@ function addWifiScope(
   project: ProjectEstimate,
   accumulator: PricingAccumulator
 ): void {
-  if (!project.wifi.requested) {
-    return;
-  }
+  if (!project.wifi.requested) return;
 
   const explicitAccessPointCount =
-    project.wifi
-      .estimatedAccessPointCount
-      .value;
-
+    project.wifi.estimatedAccessPointCount.value;
   const concurrentUsers =
-    project.wifi
-      .estimatedConcurrentUsers
-      .value ?? 0;
+    project.wifi.estimatedConcurrentUsers.value ?? 0;
+  const squareFootage = project.property.squareFootage.value ?? 0;
+  const projectType = project.property.projectType ?? "other";
 
-  const squareFootage =
-    project.property.squareFootage
-      .value ?? 0;
+  const sqftPerAp =
+    ["warehouse", "industrial"].includes(projectType)
+      ? 4500
+      : ["restaurant", "retail", "medical"].includes(projectType)
+      ? 2200
+      : 3000;
 
-  const calculatedAccessPointCount =
-    explicitAccessPointCount ??
-    Math.max(
-      1,
-      Math.ceil(
-        Math.max(
-          concurrentUsers / 35,
-          squareFootage / 3500
-        )
-      )
-    );
+  let inferredCount = Math.max(
+    1,
+    Math.ceil(Math.max(concurrentUsers / 30, squareFootage / sqftPerAp))
+  );
+
+  if (project.wifi.outdoorCoverage === true) inferredCount += 1;
+  if (project.property.numberOfFloors.value && project.property.numberOfFloors.value! > inferredCount) {
+    inferredCount = Math.ceil(project.property.numberOfFloors.value!);
+  }
+
+  const accessPointCount = explicitAccessPointCount ?? inferredCount;
 
   addCatalogItem(
     accumulator,
     "wifi-ap",
-    calculatedAccessPointCount,
+    accessPointCount,
     explicitAccessPointCount !== null
       ? "Access-point quantity provided during project discovery."
-      : "Preliminary access-point quantity based on square footage and concurrent-device demand."
+      : "Preliminary AP quantity based on property size, density, floor count and coverage goals."
   );
 
-  project.wifi
-    .estimatedAccessPointCount = {
-    value:
-      calculatedAccessPointCount,
-
+  project.wifi.estimatedAccessPointCount = {
+    value: accessPointCount,
     confidence:
       explicitAccessPointCount !== null
-        ? project.wifi
-            .estimatedAccessPointCount
-            .confidence
+        ? project.wifi.estimatedAccessPointCount.confidence
         : "ai_inferred",
   };
 }
@@ -326,29 +274,86 @@ function addAccessControlScope(
   project: ProjectEstimate,
   accumulator: PricingAccumulator
 ): void {
-  if (
-    !project.accessControl.requested
-  ) {
-    return;
-  }
+  if (!project.accessControl.requested) return;
 
-  const controlledDoorCount =
-    project.accessControl
-      .controlledDoorCount
-      .value ?? 0;
+  const doors = project.accessControl.controlledDoorCount.value ?? 0;
+  if (doors <= 0) return;
 
   addCatalogItem(
     accumulator,
     "door-reader",
-    controlledDoorCount,
-    "One credential reader is provisioned for each controlled opening."
+    doors,
+    "One credential reader allowance per controlled opening."
   );
-
   addCatalogItem(
     accumulator,
     "door-controller",
-    controlledDoorCount,
-    "Preliminary allowance of one door-control interface per controlled opening."
+    doors,
+    "Door-control interface allowance per controlled opening."
+  );
+  addCatalogItem(
+    accumulator,
+    "door-hardware-allowance",
+    doors,
+    "Allowance for lock interface, request-to-exit, door contact and related low-voltage hardware."
+  );
+}
+
+function addNetworkScope(
+  project: ProjectEstimate,
+  accumulator: PricingAccumulator
+): void {
+  const cameraCount = getCameraCount(project);
+  const apCount = project.wifi.estimatedAccessPointCount.value ?? 0;
+  const doorCount = project.accessControl.controlledDoorCount.value ?? 0;
+  const poeEndpoints = cameraCount + apCount + doorCount;
+
+  if (project.network.requested && project.network.existingRouter !== true) {
+    addCatalogItem(
+      accumulator,
+      "gateway",
+      1,
+      "Managed gateway allowance because the project includes network scope and no reusable router is confirmed."
+    );
+  }
+
+  if (poeEndpoints > 0 && cameraCount === 0) {
+    addPoESwitching(accumulator, poeEndpoints, project);
+  }
+}
+
+function addPoESwitching(
+  accumulator: PricingAccumulator,
+  endpointCount: number,
+  project: ProjectEstimate
+): void {
+  if (project.network.existingSwitches === true) return;
+
+  if (endpointCount <= 16) {
+    addCatalogItem(
+      accumulator,
+      "switch-24-standard",
+      1,
+      "PoE switching allowance sized to connected devices with spare capacity."
+    );
+    return;
+  }
+
+  if (endpointCount <= 24) {
+    addCatalogItem(
+      accumulator,
+      "switch-24-pro",
+      1,
+      "Higher-capacity PoE switching allowance for connected devices and future headroom."
+    );
+    return;
+  }
+
+  addCatalogItem(
+    accumulator,
+    "switch-48",
+    Math.ceil(endpointCount / 40),
+    "48-port-class PoE switching allowance with capacity reserved for growth."
   );
 }
 
@@ -356,61 +361,58 @@ function addCablingScope(
   project: ProjectEstimate,
   accumulator: PricingAccumulator
 ): void {
-  const explicitCableFeet =
-    project.cabling
-      .estimatedCableFeet.value;
+  const explicitCableFeet = project.cabling.estimatedCableFeet.value;
+  const cameraCount = getCameraCount(project);
+  const apCount = project.wifi.estimatedAccessPointCount.value ?? 0;
+  const doorCount = project.accessControl.controlledDoorCount.value ?? 0;
+  const dataRuns = cameraCount + apCount;
 
-  const cameraCount =
-    (project.cameras.interiorCount
-      .value ?? 0) +
-    (project.cameras.exteriorCount
-      .value ?? 0) +
-    (project.cameras.specialtyCount
-      .value ?? 0);
+  const projectType = project.property.projectType ?? "other";
+  const averageRunFeet = PROJECT_RUN_FEET[projectType] ?? 130;
 
-  const accessPointCount =
-    project.wifi
-      .estimatedAccessPointCount
-      .value ?? 0;
+  const inferredCableFeet = Math.ceil(
+    (dataRuns * averageRunFeet + doorCount * 125) * 1.12
+  );
 
-  const doorCount =
-    project.accessControl
-      .controlledDoorCount
-      .value ?? 0;
+  const cableFeet = explicitCableFeet ?? inferredCableFeet;
 
-  const estimatedDeviceRuns =
-    cameraCount +
-    accessPointCount +
-    doorCount;
-
-  const inferredCableFeet =
-    estimatedDeviceRuns > 0
-      ? estimatedDeviceRuns * 175
-      : 0;
-
-  const cableFeet =
-    explicitCableFeet ??
-    inferredCableFeet;
+  // If existing cabling is confirmed reusable, keep a smaller allowance for
+  // rework/new drops rather than pretending every device requires a full run.
+  const adjustedCableFeet =
+    project.cabling.existingCablingAvailable === true && explicitCableFeet === null
+      ? Math.ceil(cableFeet * 0.35)
+      : cableFeet;
 
   addCatalogItem(
     accumulator,
     "cat6",
-    cableFeet,
+    adjustedCableFeet,
     explicitCableFeet !== null
-      ? "Cable quantity provided during project discovery."
-      : "Preliminary cable allowance based on device count and average commercial cable-run distance."
+      ? "Cable footage supplied during project discovery."
+      : "Cable allowance inferred from device count, project type, average pathway distance and service slack."
   );
 
-  if (
-    explicitCableFeet === null &&
-    cableFeet > 0
-  ) {
-    project.cabling
-      .estimatedCableFeet = {
-      value: cableFeet,
+  const endpointCount = dataRuns + doorCount;
+  addCatalogItem(
+    accumulator,
+    "cable-endpoint",
+    endpointCount,
+    "Termination, certification/test and labeling allowance per connected endpoint."
+  );
 
-      confidence:
-        "ai_inferred",
+  if (endpointCount >= 8 && project.network.existingRack !== true) {
+    addCatalogItem(
+      accumulator,
+      "patch-panel-24",
+      Math.max(1, Math.ceil(endpointCount / 24)),
+      "Patch-panel allowance for organized structured cabling."
+    );
+  }
+
+  if (explicitCableFeet === null && adjustedCableFeet > 0) {
+    project.cabling.estimatedCableFeet = {
+      value: adjustedCableFeet,
+      confidence: "ai_inferred",
     };
   }
 }
@@ -419,17 +421,150 @@ function addRackScope(
   project: ProjectEstimate,
   accumulator: PricingAccumulator
 ): void {
-  if (
-    project.network.rackRequired ===
-    true
-  ) {
-    addCatalogItem(
-      accumulator,
-      "rack",
-      1,
-      "Dedicated rack requested for network and security equipment."
-    );
+  if (project.network.rackRequired !== true || project.network.existingRack === true) {
+    return;
   }
+
+  const endpoints =
+    getCameraCount(project) +
+    (project.wifi.estimatedAccessPointCount.value ?? 0) +
+    (project.accessControl.controlledDoorCount.value ?? 0);
+
+  addCatalogItem(
+    accumulator,
+    endpoints > 24 ? "rack-full" : "rack-small",
+    1,
+    endpoints > 24
+      ? "Floor-rack allowance based on project scale."
+      : "Wall-rack allowance for network and security equipment."
+  );
+}
+
+function calculateLaborComplexityMultiplier(project: ProjectEstimate): number {
+  let multiplier = 1;
+
+  const difficulty = project.installation.difficultyLevel;
+  multiplier *=
+    difficulty === "moderate"
+      ? 1.15
+      : difficulty === "difficult"
+      ? 1.35
+      : difficulty === "specialty"
+      ? 1.55
+      : 1;
+
+  const construction = project.property.constructionType;
+  if (construction === "existing_finished") multiplier *= 1.15;
+  if (construction === "renovation") multiplier *= 1.08;
+  if (construction === "new_construction") multiplier *= 0.92;
+
+  const ceiling = project.property.ceilingType;
+  if (ceiling === "drywall") multiplier *= 1.12;
+  if (ceiling === "warehouse_deck") multiplier *= 1.15;
+  if (ceiling === "mixed") multiplier *= 1.08;
+
+  const ceilingHeight = project.property.ceilingHeightFeet.value ?? 0;
+  if (ceilingHeight >= 20) multiplier *= 1.18;
+  else if (ceilingHeight >= 14) multiplier *= 1.08;
+
+  if (project.cabling.wiringStyle === "hidden") multiplier *= 1.15;
+  if (project.cabling.wiringStyle === "mixed") multiplier *= 1.07;
+  if (project.cabling.trenchingRequired === true) multiplier *= 1.15;
+  if (project.cabling.fireStoppingRequired === true) multiplier *= 1.08;
+  if (project.property.occupiedDuringInstall === true) multiplier *= 1.08;
+  if (project.installation.afterHoursRequired === true) multiplier *= 1.25;
+  if (project.installation.liftRequired === true) multiplier *= 1.08;
+
+  return Math.min(2.25, Math.max(0.85, multiplier));
+}
+
+function calculateEquipmentRentalCost(project: ProjectEstimate): number {
+  if (project.installation.liftRequired !== true) return 0;
+
+  const laborHours = project.installation.estimatedLaborHours.value ?? 8;
+  const estimatedDays = Math.max(1, Math.ceil(laborHours / 14));
+  const liftType = (project.installation.liftType ?? "").toLowerCase();
+  const dailyRate = liftType.includes("boom") ? 575 : 425;
+
+  return estimatedDays * dailyRate;
+}
+
+function calculateTravelCost(project: ProjectEstimate): number {
+  const miles = project.installation.travelMiles.value ?? 0;
+  if (miles <= 0) return 0;
+  return Math.max(35, miles * 0.85);
+}
+
+function calculateProjectConsumables(
+  materialCost: number,
+  project: ProjectEstimate
+): number {
+  let rate = 0.08;
+  if (project.cabling.wiringStyle === "exposed") rate += 0.04;
+  if (project.cabling.trenchingRequired === true) rate += 0.04;
+  if (project.cabling.fireStoppingRequired === true) rate += 0.03;
+  return Math.max(60, materialCost * rate);
+}
+
+function calculateMobilizationCost(project: ProjectEstimate): number {
+  const projectType = project.property.projectType;
+  const commercial = projectType && projectType !== "residential";
+  return commercial ? 225 : 125;
+}
+
+function determineTargetMarginPercent(
+  project: ProjectEstimate,
+  directCost: number
+): number {
+  let margin = directCost < 2500 ? 32 : directCost < 7500 ? 29 : 27;
+
+  if (["difficult", "specialty"].includes(project.installation.difficultyLevel)) {
+    margin += 2;
+  }
+  if (project.installation.afterHoursRequired === true) margin += 1;
+
+  return Math.min(35, margin);
+}
+
+function calculateEstimateUncertainty(project: ProjectEstimate): number {
+  let uncertainty = 0.1;
+
+  const confidence = project.assessment.confidenceScore;
+  if (confidence < 50) uncertainty += 0.08;
+  else if (confidence < 70) uncertainty += 0.05;
+  else if (confidence < 85) uncertainty += 0.02;
+
+  if (project.property.constructionType === "unknown") uncertainty += 0.025;
+  if (project.property.ceilingType === "unknown") uncertainty += 0.02;
+  if (project.cabling.wiringStyle === "unknown") uncertainty += 0.02;
+  if (project.cabling.estimatedCableFeet.confidence === "unknown") uncertainty += 0.02;
+
+  return Math.min(0.24, Math.max(0.08, uncertainty));
+}
+
+function inferCrewSize(
+  laborHours: number,
+  project: ProjectEstimate
+): number {
+  if (laborHours >= 36 || project.installation.liftRequired === true) return 2;
+  return 1;
+}
+
+function inferDurationDays(
+  laborHours: number,
+  project: ProjectEstimate
+): number {
+  const crew = inferCrewSize(laborHours, project);
+  const productiveHoursPerTechDay = 7;
+  return Math.max(1, Math.ceil(laborHours / (crew * productiveHoursPerTechDay)));
+}
+
+function getCameraCount(project: ProjectEstimate): number {
+  return (
+    (project.cameras.interiorCount.value ?? 0) +
+    (project.cameras.exteriorCount.value ?? 0) +
+    (project.cameras.specialtyCount.value ?? 0)
+  );
 }
 
 function addCatalogItem(
@@ -438,35 +573,15 @@ function addCatalogItem(
   quantity: number,
   reason: string
 ): void {
-  if (
-    !Number.isFinite(quantity) ||
-    quantity <= 0
-  ) {
-    return;
-  }
+  if (!Number.isFinite(quantity) || quantity <= 0) return;
 
-  const item =
-    getCatalogItem(catalogId);
+  const item = getCatalogItem(catalogId);
+  const normalizedQuantity = Math.ceil(quantity);
 
-  const normalizedQuantity =
-    item.unit === "foot"
-      ? Math.ceil(quantity)
-      : Math.ceil(quantity);
-
-  accumulator.materialCost +=
-    item.unitCost *
-    normalizedQuantity;
-
-  accumulator.laborHours +=
-    item.laborHours *
-    normalizedQuantity;
-
+  accumulator.materialCost += item.unitCost * normalizedQuantity;
+  accumulator.laborHours += item.laborHours * normalizedQuantity;
   accumulator.recommendedItems.push(
-    createRecommendedItem(
-      item,
-      normalizedQuantity,
-      reason
-    )
+    createRecommendedItem(item, normalizedQuantity, reason)
   );
 }
 
@@ -476,95 +591,31 @@ function createRecommendedItem(
   reason: string
 ): RecommendedItem {
   return {
-    category:
-      item.category,
-
-    description:
-      item.name,
-
+    category: item.category,
+    description: item.name,
     quantity,
-
-    manufacturer:
-      item.manufacturer ?? null,
-
-    model:
-      item.model ?? null,
-
+    manufacturer: item.manufacturer ?? null,
+    model: item.model ?? null,
     reason,
   };
 }
 
-function getCatalogItem(
-  catalogId: string
-): CatalogItem {
-  const item =
-    pricingCatalog.find(
-      (candidate) =>
-        candidate.id === catalogId
-    );
-
+function getCatalogItem(catalogId: string): CatalogItem {
+  const item = pricingCatalog.find((candidate) => candidate.id === catalogId);
   if (!item) {
-    throw new Error(
-      `Pricing catalog item "${catalogId}" was not found.`
-    );
+    throw new Error(`Pricing catalog item "${catalogId}" was not found.`);
   }
-
   return item;
 }
 
-function calculateEquipmentRentalCost(
-  project: ProjectEstimate
-): number {
-  if (
-    project.installation
-      .liftRequired !== true
-  ) {
-    return 0;
-  }
-
-  const durationDays =
-    project.installation
-      .estimatedDurationDays.value ??
-    1;
-
-  return (
-    Math.max(
-      1,
-      Math.ceil(durationDays)
-    ) * 350
-  );
+function roundCurrency(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-function calculateTravelCost(
-  project: ProjectEstimate
-): number {
-  const travelMiles =
-    project.installation
-      .travelMiles.value ?? 0;
-
-  return travelMiles * 0.85;
+function roundToFriendlyPrice(value: number): number {
+  return Math.max(0, Math.round(value / 50) * 50);
 }
 
-function roundCurrency(
-  value: number
-): number {
-  return (
-    Math.round(
-      (value +
-        Number.EPSILON) *
-        100
-    ) / 100
-  );
-}
-
-function roundQuantity(
-  value: number
-): number {
-  return (
-    Math.round(
-      (value +
-        Number.EPSILON) *
-        10
-    ) / 10
-  );
+function roundQuantity(value: number): number {
+  return Math.round((value + Number.EPSILON) * 10) / 10;
 }
