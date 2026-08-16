@@ -228,8 +228,15 @@ function HomeShell() {
 
       <HeroSection />
       <TrustBar />
-
       <SmartNetGeneratorSection startOnSummary={hasResumeToken} />
+
+      <WalkthroughWarmupSection />
+      <section id="booking-calendar" className="border-t border-sky-500/10 bg-[#020617]">
+        <BookingCalendarSection
+          estimate={calendarEstimate}
+          onConfirmBooking={handleConfirmBooking}
+        />
+      </section>
 
       <HowItWorksSection />
       <WhySmartNetSection />
@@ -240,15 +247,6 @@ function HomeShell() {
       <PricingPreviewSection />
       <ServiceAreaSection />
       <FaqSection />
-
-      <WalkthroughWarmupSection />
-
-      <section id="booking-calendar" className="border-t border-sky-500/10 bg-[#020617]">
-        <BookingCalendarSection
-          estimate={calendarEstimate}
-          onConfirmBooking={handleConfirmBooking}
-        />
-      </section>
 
       <Footer />
     </main>
