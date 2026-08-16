@@ -1,168 +1,62 @@
 "use client";
 
-import * as React from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Cable, Cpu, Sparkles } from "lucide-react";
+import { Cable, Cpu, FileCheck2, ShieldCheck, Sparkles } from "lucide-react";
+
+const capabilities = [
+  { icon: Cpu, title: "Systems thinking", body: "Projects are planned as connected systems—power, network, coverage, pathways and future expansion—not as isolated devices." },
+  { icon: Cable, title: "Clean infrastructure", body: "Cable routes, terminations, labels and rack organization are treated as part of the finished product." },
+  { icon: FileCheck2, title: "Documented scope", body: "The estimator, walkthrough and proposal share the same project context so fewer details get lost between steps." },
+  { icon: ShieldCheck, title: "Professional verification", body: "Preliminary AI output is verified against the real site before final pricing and installation." },
+];
 
 export function WhySmartNetSection() {
   return (
-    <motion.section
-      className="relative w-full px-4 py-10 md:py-16"
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-      {/* Soft background accent + ghost title */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-10 top-8 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
-        <p className="absolute -left-4 top-6 hidden text-7xl font-black tracking-[0.2em] text-slate-800/40 md:block">
-          SMARTNET
-        </p>
-      </div>
-
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:gap-12">
-        {/* Left: story / positioning */}
-        <div className="max-w-xl space-y-4">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-sky-300/70">
-            Why SmartNET
-          </p>
-          <h2 className="text-balance text-2xl font-semibold text-slate-50 md:text-3xl">
-            Enterprise discipline, installed in real-world spaces.
+    <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_28%,rgba(14,165,233,.11),transparent_30%),radial-gradient(circle_at_12%_80%,rgba(37,99,235,.09),transparent_28%)]" />
+      <div className="relative mx-auto grid max-w-[1500px] gap-10 xl:grid-cols-[.9fr_1.1fr] xl:items-center">
+        <div className="max-w-2xl">
+          <div className="inline-flex items-center gap-2 border-y border-sky-400/25 bg-sky-950/20 px-4 py-2 text-[.68rem] font-bold uppercase tracking-[.22em] text-sky-300">
+            <Sparkles className="h-4 w-4" /> Why SmartNET
+          </div>
+          <h2 className="mt-6 text-4xl font-black uppercase leading-[1.02] tracking-[-.035em] text-white sm:text-5xl lg:text-6xl">
+            Built like infrastructure. <span className="block bg-gradient-to-r from-sky-300 via-blue-500 to-blue-700 bg-clip-text text-transparent">Delivered like a service.</span>
           </h2>
-          <p className="text-sm text-slate-300/80 md:text-base">
-            SmartNET blends datacenter-grade methods with on-site installation. You get
-            clean routing, labeled systems and smart coverage planning—without the
-            usual “contractor chaos.”
+          <p className="mt-6 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
+            SmartNET combines disciplined low-voltage installation with an AI-assisted planning layer so customers get a clearer scope before anyone starts drilling.
           </p>
 
-          <div className="mt-4 grid gap-3 text-xs text-slate-200/85 md:text-sm">
-            <Bullet>
-              <span className="font-semibold text-sky-200">Datacenter mindset</span>{" "}
-              applied to homes, warehouses and offices.
-            </Bullet>
-            <Bullet>
-              AI-assisted planning + human field experience for confident installs.
-            </Bullet>
-            <Bullet>
-              Respect for your space: we route cleanly, document clearly and leave
-              your site better than we found it.
-            </Bullet>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:max-w-xl">
+            {["Plan before install", "Verify before quote", "Label what matters", "Design for growth"].map((item) => (
+              <div key={item} className="flex items-center gap-2 border-l border-sky-400/30 pl-3 text-sm font-semibold text-slate-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,.6)]" />{item}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right: vertical rail with feature nodes */}
-        <motion.div
-          className="relative flex-1"
-          initial={{ opacity: 0, x: 32 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.25 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-        >
-          {/* Vertical HUD rail */}
-          <div className="pointer-events-none absolute left-4 top-0 bottom-0 hidden md:block">
-            <div className="mx-auto h-full w-px bg-gradient-to-b from-cyan-500/0 via-cyan-500/40 to-cyan-500/0" />
+        <div className="relative">
+          <div className="pointer-events-none absolute -inset-10 bg-[radial-gradient(circle,rgba(37,99,235,.13),transparent_62%)] blur-2xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-sky-400/15 bg-[#061020]/80">
+            <div className="flex items-center justify-between border-b border-sky-400/10 px-5 py-4">
+              <div>
+                <p className="text-[.62rem] font-bold uppercase tracking-[.2em] text-sky-300">SmartNET operating standard</p>
+                <p className="mt-1 text-sm text-slate-400">What stays consistent from project to project</p>
+              </div>
+              <div className="flex gap-1.5"><span className="h-2 w-2 rounded-full bg-sky-400/70"/><span className="h-2 w-2 rounded-full bg-blue-500/50"/><span className="h-2 w-2 rounded-full bg-slate-600"/></div>
+            </div>
+            <div className="grid sm:grid-cols-2">
+              {capabilities.map(({ icon: Icon, title, body }, index) => (
+                <motion.div key={title} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .06 }} className={`p-5 sm:p-6 ${index % 2 ? "sm:border-l sm:border-sky-400/10" : ""} ${index > 1 ? "border-t border-sky-400/10" : index === 1 ? "border-t border-sky-400/10 sm:border-t-0" : ""}`}>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/20 bg-sky-400/[.06] text-sky-300"><Icon className="h-5 w-5"/></span>
+                  <h3 className="mt-5 text-base font-bold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{body}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-
-          <div className="flex flex-col gap-4 md:pl-10">
-            <FeatureNode
-              index={0}
-              icon={<Cpu className="h-4 w-4 text-cyan-300" />}
-              title="Datacenter-trained discipline"
-              body="Experience from environments that demand uptime, cable management and documentation—applied directly to your project."
-              tag="Microsoft / TekSystems / IES background"
-            />
-            <FeatureNode
-              index={1}
-              icon={<Cable className="h-4 w-4 text-cyan-300" />}
-              title="Clean routing & labeled systems"
-              body="We treat every site like a mini-IDF: clean cable paths, labeled drops and clear handoff so you always know what’s what."
-              tag="No mystery wires, no spaghetti ceilings"
-            />
-            <FeatureNode
-              index={2}
-              icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}
-              title="Professional hardware & warranty"
-              body="We design around proven cameras, APs and network gear—no random bargain-bin hardware that fails when you need it."
-              tag="Built on pro-grade systems"
-            />
-            <FeatureNode
-              index={3}
-              icon={<Sparkles className="h-4 w-4 text-cyan-300" />}
-              title="SmartNET AI planning layer"
-              body="Your install is pre-planned with AI assistance—coverage, angles, Wi-Fi density and routing paths thought through before we drill."
-              tag="Human + AI planning loop"
-            />
-          </div>
-        </motion.div>
-      </div>
-    </motion.section>
-  );
-}
-
-type BulletProps = {
-  children: React.ReactNode;
-};
-
-function Bullet({ children }: BulletProps) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(56,189,248,0.9)]" />
-      <p>{children}</p>
-    </div>
-  );
-}
-
-type FeatureNodeProps = {
-  index: number;
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  tag: string;
-};
-
-function FeatureNode({ index, icon, title, body, tag }: FeatureNodeProps) {
-  return (
-    <motion.div
-      className="relative rounded-xl border border-sky-500/15 bg-slate-950/70 px-4 py-3 shadow-[0_0_26px_rgba(8,47,73,0.45)]"
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{
-        duration: 0.35,
-        ease: "easeOut",
-        delay: index * 0.08,
-      }}
-      whileHover={{
-        y: -4,
-        boxShadow: "0 0 38px rgba(56,189,248,0.35)",
-        borderColor: "rgba(56,189,248,0.55)",
-      }}
-      whileTap={{ scale: 0.985 }}
-    >
-      {/* Rail node dot (desktop) */}
-      <div className="pointer-events-none absolute -left-[26px] top-4 hidden h-3 w-3 items-center justify-center rounded-full border border-cyan-400/60 bg-slate-950/95 md:flex">
-        <motion.div
-          className="h-1.5 w-1.5 rounded-full bg-cyan-300"
-          animate={{ boxShadow: ["0 0 0 rgba(56,189,248,0)", "0 0 10px rgba(56,189,248,0.9)", "0 0 0 rgba(56,189,248,0)"] }}
-          transition={{ duration: 2.4, repeat: Infinity, delay: index * 0.2 }}
-        />
-      </div>
-
-      {/* Main content */}
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-cyan-500/10">
-          {icon}
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-slate-50">{title}</h3>
-          <p className="text-xs text-slate-300/85">{body}</p>
-          <p className="mt-1 inline-flex rounded-full bg-cyan-500/10 px-2 py-0.5 text-[0.65rem] font-medium text-cyan-100">
-            {tag}
-          </p>
         </div>
       </div>
-    </motion.div>
+    </section>
   );
 }
