@@ -1,164 +1,58 @@
 "use client";
 
-import * as React from "react";
 import { motion } from "framer-motion";
-import {
-  Home,
-  Store,
-  Warehouse,
-  Building2,
-  Church,
-  KeyRound,
-} from "lucide-react";
+import { ArrowUpRight, Building2, Church, Home, KeyRound, Store, Warehouse } from "lucide-react";
+
+const projects = [
+  { icon: Home, eyebrow: "Residential", title: "Homes & estates", body: "Driveways, porches, garages, backyards and interior coverage designed around how the property is actually used." },
+  { icon: Store, eyebrow: "Retail", title: "Shops, salons & studios", body: "Customer entrances, registers, service areas and back rooms covered without turning the space into a camera showroom." },
+  { icon: Warehouse, eyebrow: "Industrial", title: "Warehouses & yards", body: "Dock doors, aisles, loading lanes and perimeter coverage with cable paths planned for serviceability and growth." },
+  { icon: Building2, eyebrow: "Commercial", title: "Offices & suites", body: "Lobbies, corridors, shared spaces, Wi-Fi and IT closets tied together as one clean system." },
+  { icon: Church, eyebrow: "Community", title: "Churches & gathering spaces", body: "Sanctuaries, classrooms, parking lots and common areas planned with coverage, comfort and privacy in mind." },
+  { icon: KeyRound, eyebrow: "Hospitality", title: "Rentals & small portfolios", body: "Entry, parking and common-area visibility for short-term rentals and multi-property owners." },
+];
 
 export function ProjectTypesSection() {
-  const types = [
-    {
-      icon: <Home className="h-5 w-5 text-cyan-300" />,
-      label: "Homes & driveways",
-      title: "Single-family, townhomes & small lots",
-      body: "Front doors, driveways, side gates, garages and back patios with coverage that still looks good on your house.",
-      tag: "Owner-occupied and family properties",
-    },
-    {
-      icon: <Store className="h-5 w-5 text-cyan-300" />,
-      label: "Shops & salons",
-      title: "Retail, barbers, studios & boutiques",
-      body: "Registers, chairs, entrances and parking all on the same system, tuned for foot traffic and staff flow.",
-      tag: "Customer-facing spaces",
-    },
-    {
-      icon: <Warehouse className="h-5 w-5 text-cyan-300" />,
-      label: "Warehouses & garages",
-      title: "Bays, inventory rows & yards",
-      body: "Loading doors, interior aisles and tool areas for small industrial spaces without going full enterprise budget.",
-      tag: "Light industrial & storage",
-    },
-    {
-      icon: <Building2 className="h-5 w-5 text-cyan-300" />,
-      label: "Offices & suites",
-      title: "Lobbies, hallways & shared spaces",
-      body: "Entries, mailrooms and common areas with options to grow into access control and more APs later.",
-      tag: "Professional & multi-tenant",
-    },
-    {
-      icon: <Church className="h-5 w-5 text-cyan-300" />,
-      label: "Churches & community spaces",
-      title: "Sanctuaries, halls & lots",
-      body: "Coverage for gatherings, kids areas and parking lots with attention to angles, privacy and comfort.",
-      tag: "Community-focused installs",
-    },
-    {
-      icon: <KeyRound className="h-5 w-5 text-cyan-300" />,
-      label: "Airbnb & rentals",
-      title: "Short-term & small portfolios",
-      body: "Smart placement around doors, driveways and shared spaces so you see what matters, not your guests’ private life.",
-      tag: "Host-ready camera layouts",
-    },
-  ];
-
   return (
-    <motion.section
-      id="project-types" // 🔹 anchor target for "Services & use cases"
-      className="relative w-full px-4 py-12 md:py-16"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
-    >
-      {/* glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-40 w-[70%] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
-
-      <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        {/* heading */}
-        <div className="mx-auto max-w-3xl space-y-3 text-center">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-sky-300/80">
-            Project types
-          </p>
-          <h2 className="text-balance text-2xl font-semibold text-slate-50 md:text-3xl">
-            SmartNET is built for real-world spaces, not just server rooms
-          </h2>
-          <p className="text-sm text-slate-300/80 md:text-base">
-            If it has a door, a driveway, a parking lot or a back room where
-            you keep the important stuff, we probably have a layout pattern for it.
-          </p>
+    <section id="project-types" className="relative overflow-hidden border-y border-sky-500/10 bg-[#020617] py-20 sm:py-24">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(37,99,235,.15),transparent_28%),radial-gradient(circle_at_92%_85%,rgba(14,165,233,.08),transparent_30%)]" />
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.28em] text-sky-300">Built for real spaces</p>
+            <h2 className="mt-4 max-w-xl text-4xl font-black tracking-tight text-white sm:text-5xl">One platform. Different environments.</h2>
+          </div>
+          <p className="max-w-2xl text-base leading-7 text-slate-300 lg:justify-self-end">SmartNET adapts the same planning discipline to homes, businesses and larger sites—without forcing every property into the same template.</p>
         </div>
 
-        {/* grid */}
-        <div className="grid gap-4 md:grid-cols-3 md:gap-5">
-          {types.map((item, index) => (
-            <ProjectCard key={item.label} index={index} {...item} />
-          ))}
-        </div>
-
-        <p className="mx-auto max-w-3xl text-center text-[0.75rem] text-slate-400 md:text-xs">
-          Not sure if your property fits one of these buckets? Use the notes
-          field in the wizard to describe it in plain language — SmartNET is
-          built to adapt the plan to the space you actually have.
-        </p>
-      </div>
-    </motion.section>
-  );
-}
-
-type ProjectCardProps = {
-  index: number;
-  icon: React.ReactNode;
-  label: string;
-  title: string;
-  body: string;
-  tag: string;
-};
-
-function ProjectCard({
-  index,
-  icon,
-  label,
-  title,
-  body,
-  tag,
-}: ProjectCardProps) {
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{
-        duration: 0.35,
-        ease: "easeOut",
-        delay: index * 0.04,
-      }}
-      whileHover={{
-        y: -4,
-        boxShadow: "0 0 32px rgba(56,189,248,0.35)",
-        borderColor: "rgba(56,189,248,0.6)",
-      }}
-      className="flex h-full flex-col rounded-xl border border-sky-500/25 bg-slate-950/70 p-4 shadow-[0_0_24px_rgba(8,47,73,0.5)] md:p-5"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/10">
-          {icon}
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-sky-300/80">
-            {label}
-          </span>
-          <h3 className="text-xs font-semibold text-slate-50 md:text-sm">
-            {title}
-          </h3>
+        <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {projects.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <motion.article
+                key={item.title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: .2 }}
+                transition={{ duration: .35, delay: index * .04 }}
+                whileHover={{ y: -5 }}
+                className="group relative overflow-hidden rounded-2xl border border-sky-400/15 bg-[linear-gradient(145deg,rgba(8,17,34,.96),rgba(3,8,23,.9))] p-5 shadow-[0_20px_70px_rgba(2,6,23,.38)]"
+              >
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent opacity-70" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-400/20 bg-sky-400/10 text-sky-300">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-slate-600 transition group-hover:text-sky-300" />
+                </div>
+                <p className="mt-6 text-[.65rem] font-bold uppercase tracking-[.22em] text-sky-300/80">{item.eyebrow}</p>
+                <h3 className="mt-2 text-xl font-bold text-white">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{item.body}</p>
+              </motion.article>
+            );
+          })}
         </div>
       </div>
-
-      <p className="mt-1 text-[0.7rem] text-slate-300/90">{body}</p>
-
-      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1">
-        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
-        <span className="text-[0.7rem] font-medium text-cyan-100/90">
-          {tag}
-        </span>
-      </div>
-    </motion.article>
+    </section>
   );
 }
