@@ -23,11 +23,14 @@ export type CatalogItem = {
 };
 
 /**
- * SmartNET retail-cost baseline.
+ * SmartNET direct-cost baseline used by the preliminary estimator.
  *
- * Hardware values are intentionally close to public manufacturer pricing,
- * while laborHours represent SmartNET installation effort, not manufacturer
- * install times. The pricing engine applies site-complexity multipliers later.
+ * Hardware is held near public retail / normal acquisition cost so the
+ * pricing engine can add SmartNET overhead and margin in one predictable
+ * place. Labor's unitCost is intentionally a burdened INTERNAL field cost,
+ * not the customer-facing hourly sell rate. The previous catalog used a
+ * sell-rate-like number here and then applied overhead + margin again,
+ * which materially overstated labor on multi-system projects.
  */
 export const pricingCatalog: CatalogItem[] = [
   {
@@ -37,7 +40,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "G5 Bullet",
     unitCost: 129,
-    laborHours: 1.25,
+    laborHours: 1.1,
     unit: "each",
   },
   {
@@ -47,7 +50,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "G5 Dome",
     unitCost: 179,
-    laborHours: 1.25,
+    laborHours: 1.1,
     unit: "each",
   },
   {
@@ -57,7 +60,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "G5 Pro / AI-class allowance",
     unitCost: 399,
-    laborHours: 1.75,
+    laborHours: 1.5,
     unit: "each",
   },
   {
@@ -65,7 +68,7 @@ export const pricingCatalog: CatalogItem[] = [
     category: "mounting",
     name: "Camera Junction / Weatherproof Mount Allowance",
     unitCost: 39,
-    laborHours: 0.2,
+    laborHours: 0.1,
     unit: "each",
   },
   {
@@ -75,7 +78,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "UNVR",
     unitCost: 499,
-    laborHours: 2,
+    laborHours: 1.25,
     unit: "each",
   },
   {
@@ -85,7 +88,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Western Digital",
     model: "Purple Pro class",
     unitCost: 220,
-    laborHours: 0.25,
+    laborHours: 0.15,
     unit: "each",
   },
   {
@@ -95,7 +98,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "USW-24-POE",
     unitCost: 379,
-    laborHours: 1.5,
+    laborHours: 1,
     unit: "each",
   },
   {
@@ -105,7 +108,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "USW-Pro-24-POE",
     unitCost: 699,
-    laborHours: 1.75,
+    laborHours: 1.25,
     unit: "each",
   },
   {
@@ -115,7 +118,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "48-port PoE class",
     unitCost: 899,
-    laborHours: 2,
+    laborHours: 1.5,
     unit: "each",
   },
   {
@@ -125,7 +128,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "UniFi Gateway class",
     unitCost: 279,
-    laborHours: 2,
+    laborHours: 1.25,
     unit: "each",
   },
   {
@@ -135,7 +138,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "U7 Pro",
     unitCost: 189,
-    laborHours: 1.25,
+    laborHours: 1,
     unit: "each",
   },
   {
@@ -145,7 +148,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "UA Reader class",
     unitCost: 329,
-    laborHours: 1.5,
+    laborHours: 1,
     unit: "each",
   },
   {
@@ -155,7 +158,7 @@ export const pricingCatalog: CatalogItem[] = [
     manufacturer: "Ubiquiti",
     model: "UA Hub class",
     unitCost: 499,
-    laborHours: 1.75,
+    laborHours: 1.25,
     unit: "each",
   },
   {
@@ -163,7 +166,7 @@ export const pricingCatalog: CatalogItem[] = [
     category: "access",
     name: "Door Hardware / REX / Contact Allowance",
     unitCost: 275,
-    laborHours: 2.5,
+    laborHours: 1.5,
     unit: "each",
   },
   {
@@ -172,7 +175,7 @@ export const pricingCatalog: CatalogItem[] = [
     name: "Wall-Mount Network Rack",
     manufacturer: "StarTech class",
     unitCost: 325,
-    laborHours: 2.5,
+    laborHours: 1.75,
     unit: "each",
   },
   {
@@ -181,7 +184,7 @@ export const pricingCatalog: CatalogItem[] = [
     name: "Floor Network Rack",
     manufacturer: "StarTech class",
     unitCost: 900,
-    laborHours: 4,
+    laborHours: 3,
     unit: "each",
   },
   {
@@ -189,7 +192,7 @@ export const pricingCatalog: CatalogItem[] = [
     category: "termination",
     name: "24-Port Cat6 Patch Panel",
     unitCost: 95,
-    laborHours: 1.5,
+    laborHours: 1,
     unit: "each",
   },
   {
@@ -197,7 +200,7 @@ export const pricingCatalog: CatalogItem[] = [
     category: "cable",
     name: "Cat6 Plenum Cable",
     unitCost: 0.38,
-    laborHours: 0.01,
+    laborHours: 0.006,
     unit: "foot",
   },
   {
@@ -205,7 +208,7 @@ export const pricingCatalog: CatalogItem[] = [
     category: "termination",
     name: "Cat6 Termination, Test & Label",
     unitCost: 14,
-    laborHours: 0.35,
+    laborHours: 0.25,
     unit: "each",
   },
   {
@@ -214,14 +217,14 @@ export const pricingCatalog: CatalogItem[] = [
     name: "Rack UPS Allowance",
     manufacturer: "APC class",
     unitCost: 650,
-    laborHours: 0.75,
+    laborHours: 0.5,
     unit: "each",
   },
   {
     id: "labor",
     category: "labor",
-    name: "Low-Voltage Field Technician",
-    unitCost: 110,
+    name: "Burdened Low-Voltage Field Labor",
+    unitCost: 68,
     laborHours: 1,
     unit: "hour",
   },
