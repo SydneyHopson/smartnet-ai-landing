@@ -12,53 +12,99 @@ const scenarios = [
   { name: "Datacenter", seed: { projectType: "datacenter", cameras: true, wifi: true, accessControl: true, customerIntent: "50000 square foot operating datacenter with 20 foot open ceiling, 24 cameras with 60 day retention, managed segmented Wi-Fi for 150 devices, ten controlled doors, structured labeled tested cabling, fire stopping, rack, scissor lift and after-hours change-window work." } },
 ];
 
+function firstChoice(choices) {
+  const first = choices?.[0];
+  return typeof first === "string" ? first : String(first?.value ?? first?.label ?? first ?? "");
+}
+
 function answerFor(question) {
   const text = `${question?.question || ""} ${question?.key || ""}`.toLowerCase();
-  const choices = question?.choices || [];
-  if (choices.length) {
-    const no = choices.find((c) => /^(no|none|not required)$/i.test(String(c.label || c.value || c)));
-    if (/trench|permit|after.hours|lift/.test(text) && no) return no.value ?? no.label ?? "No";
-    const first = choices[0]; return first.value ?? first.label ?? first;
+  const choices = Array.isArray(question?.choices) ? question.choices : [];
+
+  switch (question?.answerType) {
+    case "boolean":
+      if (/after.hours|outside normal|trench|permit/.test(text)) return "No";
+      if (/occupied|remain open|operations continue/.test(text)) return "Yes";
+      if (/existing router|internet equipment/.test(text)) return "Yes";
+      if (/existing cabling|reuse/.test(text)) return "Yes";
+      if (/existing rack|rack or cabinet/.test(text)) return "Yes";
+      if (/guest wi-fi/.test(text)) return "No";
+      if (/existing camera|replacing/.test(text)) return "No";
+      if (/existing access control/.test(text)) return "No";
+      return "No";
+
+    case "number":
+      if (/square|footage/.test(text)) return "5000";
+      if (/floor|level|suite/.test(text)) return "1";
+      if (/ceiling.*height|height/.test(text)) return "10";
+      if (/record|retention|days/.test(text)) return "30";
+      if (/user|device|concurrent/.test(text)) return "40";
+      if (/door/.test(text)) return "2";
+      if (/camera/.test(text)) return "8";
+      return "1";
+
+    case "single_choice":
+      return firstChoice(choices) || "No planned expansion";
+
+    case "multiple_choice":
+      return choices.length ? [firstChoice(choices)] : ["None"];
+
+    case "text":
+    default:
+      if (/coverage/.test(text) && /wi-fi|wifi/.test(text)) return "Reliable coverage throughout the occupied areas.";
+      if (/camera/.test(text) && /area|covered|coverage/.test(text)) return "Entrances, common areas, register/POS areas, and exterior approaches.";
+      if (/pathway|cable.*run/.test(text)) return "Existing accessible ceiling/pathway routes where practical.";
+      if (/credential|unlock/.test(text)) return "Key fobs and mobile access.";
+      if (/timeline|when/.test(text)) return "Within 30 days.";
+      if (/ceiling/.test(text)) return "Open or accessible commercial ceiling.";
+      return "Standard existing finished conditions.";
   }
-  if (/square|footage/.test(text)) return "5000";
-  if (/floor/.test(text)) return "1";
-  if (/ceiling.*height|height/.test(text)) return "10";
-  if (/camera/.test(text) && /how many|count|quantity/.test(text)) return "8";
-  if (/record|retention|days/.test(text)) return "30";
-  if (/user|device|concurrent/.test(text)) return "40";
-  if (/door/.test(text) && /how many|count|quantity/.test(text)) return "2";
-  if (/timeline|when/.test(text)) return "Within 30 days";
-  if (/rack/.test(text)) return "No new rack is needed; use the existing network location.";
-  if (/trench/.test(text)) return "No trenching is required.";
-  if (/lift/.test(text)) return "Normal ladder access is sufficient.";
-  if (/after.hours/.test(text)) return "No, daytime work is acceptable.";
-  return "Standard existing finished conditions; use normal professional installation practices.";
 }
 
 const rows = [];
 for (const scenario of scenarios) {
-  const seen = new Set(); let repeated = []; let turns = 0; let response;
+  const seen = new Set(); const repeated = []; let turns = 0; let response;
   try {
     response = await fetch(`${baseUrl}/api/estimator/start`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seed: scenario.seed }) });
     let data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.error || `start ${response.status}`);
+
     while (data.nextQuestion && turns < 35) {
       const id = data.nextQuestion.questionId || `${data.nextQuestion.key}:${data.nextQuestion.question}`;
-      if (seen.has(id)) repeated.push(id); seen.add(id);
+      if (seen.has(id)) repeated.push(id);
+      seen.add(id);
+
       const answer = answerFor(data.nextQuestion);
       response = await fetch(`${baseUrl}/api/estimator/answer`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sessionId: data.sessionId, answer }) });
-      data = await response.json(); turns++;
-      if (!response.ok || !data.ok) throw new Error(`${data.error || `answer ${response.status}`} [${id}]`);
+      data = await response.json();
+      turns++;
+      if (!response.ok || !data.ok) throw new Error(`${data.error || `answer ${response.status}`} [${id}] answer=${JSON.stringify(answer)}`);
     }
+
     const project = data.project || {};
-    const wrongResidentialLanguage = scenario.seed.projectType === "residential" && [...seen].some((x) => /warehouse|restaurant|medical|industrial|datacenter/i.test(x));
-    rows.push({ scenario: scenario.name, playbook: data.playbook?.id || "-", turns, repeated: repeated.length, ready: Boolean(data.conversation?.readyForPricing || project.pricing?.estimatedLow), priced: Boolean(project.pricing?.estimatedLow), low: project.pricing?.estimatedLow || 0, high: project.pricing?.estimatedHigh || 0, wrongResidentialLanguage, pass: turns < 35 && repeated.length === 0 && !wrongResidentialLanguage && Boolean(data.conversation?.readyForPricing || project.pricing?.estimatedLow) });
+    const questionText = [...seen].join(" ");
+    const wrongResidentialLanguage = scenario.seed.projectType === "residential" && /warehouse operations|store remain open|restaurant|medical facility|industrial facility|datacenter/i.test(questionText);
+    const requestedAccessControlWrongly = scenario.seed.accessControl === false && Boolean(project.accessControl?.requested);
+
+    rows.push({
+      scenario: scenario.name,
+      playbook: data.playbook?.id || "-",
+      turns,
+      repeated: repeated.length,
+      ready: Boolean(data.conversation?.readyForPricing || project.pricing?.estimatedLow),
+      priced: Boolean(project.pricing?.estimatedLow),
+      low: project.pricing?.estimatedLow || 0,
+      high: project.pricing?.estimatedHigh || 0,
+      wrongResidentialLanguage,
+      accessScopeLeak: requestedAccessControlWrongly,
+      pass: turns < 35 && repeated.length === 0 && !wrongResidentialLanguage && !requestedAccessControlWrongly && Boolean(data.conversation?.readyForPricing || project.pricing?.estimatedLow),
+    });
   } catch (error) {
-    rows.push({ scenario: scenario.name, playbook: "ERROR", turns, repeated: repeated.length, ready: false, priced: false, low: 0, high: 0, wrongResidentialLanguage: false, pass: false, error: error instanceof Error ? error.message : String(error) });
+    rows.push({ scenario: scenario.name, playbook: "ERROR", turns, repeated: repeated.length, ready: false, priced: false, low: 0, high: 0, wrongResidentialLanguage: false, accessScopeLeak: false, pass: false, error: error instanceof Error ? error.message : String(error) });
   }
 }
 
 console.table(rows.map(({ error, ...r }) => r));
 for (const row of rows.filter((r) => !r.pass)) console.error("FLOW FAILURE", row.scenario, row.error || row);
 if (rows.some((r) => !r.pass)) process.exit(1);
-console.log(`Estimator flow smoke tests passed: ${rows.length}/${rows.length}. No repeated questions detected.`);
+console.log(`Estimator flow smoke tests passed: ${rows.length}/${rows.length}. No repeated questions or scope leaks detected.`);
