@@ -29,7 +29,6 @@ import { FaqSection } from "@/components/marketing/faq-section";
 import { WalkthroughWarmupSection } from "@/components/marketing/walkthrough-warmup";
 import { Footer } from "@/components/layout/Footer";
 
-// This is the FLATTENED estimate shape we stored in magicLinkSession.rawEstimateJson
 type MagicLinkEstimate = {
   projectType?: string;
   squareFootage?: number;
@@ -46,9 +45,6 @@ type MagicLinkEstimate = {
   notes?: string;
 };
 
-// ----------------------------
-// STEP 2: Resume loader that hydrates context (silent)
-// ----------------------------
 function ResumeLoader() {
   const searchParams = useSearchParams();
   const resumeToken = searchParams.get("resumeToken");
@@ -59,8 +55,6 @@ function ResumeLoader() {
 
   React.useEffect(() => {
     if (!resumeToken) return;
-
-    // ✅ prevent double hydration on refresh/re-render in the same tab
     if (sessionStorage.getItem("smartnet:resumed")) return;
 
     if (!hydrateFromMagicLink) {
@@ -76,15 +70,8 @@ function ResumeLoader() {
         const res = await fetch(`/api/magic-link/${resumeToken}`);
         const data = await res.json();
 
-        console.log("[SmartNET] Resume response:", data);
-
         if (data.ok && !data.isExpired && data.estimate) {
-          const flatEstimate = data.estimate as MagicLinkEstimate;
-
-          // 💉 Push it into the provider
-          hydrateFromMagicLink(flatEstimate);
-
-          // ✅ mark that we successfully resumed (one-time per tab session)
+          hydrateFromMagicLink(data.estimate as MagicLinkEstimate);
           sessionStorage.setItem("smartnet:resumed", "1");
         } else {
           console.warn("[SmartNET] Invalid or expired resume link");
@@ -95,13 +82,9 @@ function ResumeLoader() {
     })();
   }, [resumeToken, hydrateFromMagicLink]);
 
-  // ✅ no UI (debug strip removed)
   return null;
 }
 
-// ----------------------------
-// EXISTING HOME SHELL
-// ----------------------------
 function HomeShell() {
   const { estimate } = useSmartNetEstimate();
   const searchParams = useSearchParams();
@@ -233,8 +216,6 @@ function HomeShell() {
       });
 
       if (!res.ok) throw new Error("Booking request failed");
-
-      // ✅ Optional cleanup: allow future resume links to hydrate again in this tab
       sessionStorage.removeItem("smartnet:resumed");
     } catch (err) {
       console.error("Failed to send booking", err);
@@ -242,14 +223,12 @@ function HomeShell() {
   };
 
   return (
-    <main className="relative min-h-screen bg-[#020617] text-slate-50">
-      {/* Resume loader: hydrates wizard silently if resumeToken exists */}
+    <main className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
       <ResumeLoader />
 
       <HeroSection />
       <TrustBar />
 
-      {/* Auto-start on Step 4 when resuming from a magic link */}
       <SmartNetGeneratorSection startOnSummary={hasResumeToken} />
 
       <HowItWorksSection />
@@ -264,7 +243,7 @@ function HomeShell() {
 
       <WalkthroughWarmupSection />
 
-      <section id="booking-calendar">
+      <section id="booking-calendar" className="border-t border-sky-500/10 bg-[#020617]">
         <BookingCalendarSection
           estimate={calendarEstimate}
           onConfirmBooking={handleConfirmBooking}
