@@ -38,7 +38,6 @@ export const warehousePlaybook: EstimatorPlaybook =
 
     projectTypes: [
       "warehouse",
-      "industrial",
     ],
 
     environmentTags: [
