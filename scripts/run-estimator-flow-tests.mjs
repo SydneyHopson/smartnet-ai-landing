@@ -19,7 +19,20 @@ function firstChoice(choices) {
 
 function answerFor(question) {
   const text = `${question?.question || ""} ${question?.key || ""}`.toLowerCase();
+  const key = question?.key || "";
   const choices = Array.isArray(question?.choices) ? question.choices : [];
+
+  // Enum-backed ProjectEstimate fields must receive canonical values.
+  if (key === "property.constructionType") return "existing_finished";
+  if (key === "property.ceilingType") {
+    if (/home|residential/.test(text)) return "drywall";
+    if (/warehouse|industrial|data center|datacenter/.test(text)) return "open_ceiling";
+    if (/office|medical/.test(text)) return "drop_ceiling";
+    return "mixed";
+  }
+  if (key === "cabling.preferredCableType") return "cat6";
+  if (key === "cabling.wiringStyle") return /warehouse|industrial|data center|datacenter/.test(text) ? "exposed" : "hidden";
+  if (key === "installation.difficultyLevel") return /medical|industrial|data center|datacenter/.test(text) ? "difficult" : "standard";
 
   switch (question?.answerType) {
     case "boolean":
@@ -56,7 +69,6 @@ function answerFor(question) {
       if (/pathway|cable.*run/.test(text)) return "Existing accessible ceiling/pathway routes where practical.";
       if (/credential|unlock/.test(text)) return "Key fobs and mobile access.";
       if (/timeline|when/.test(text)) return "Within 30 days.";
-      if (/ceiling/.test(text)) return "Open or accessible commercial ceiling.";
       return "Standard existing finished conditions.";
   }
 }
