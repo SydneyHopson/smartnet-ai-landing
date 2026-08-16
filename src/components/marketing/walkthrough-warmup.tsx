@@ -1,122 +1,43 @@
 "use client";
 
-import * as React from "react";
-import { motion } from "framer-motion";
-import { ClipboardList, Camera, FileCheck } from "lucide-react";
+import { Camera, CheckCircle2, ClipboardList, FileCheck, MoveRight } from "lucide-react";
+
+const steps = [
+  { icon: ClipboardList, title: "Walk the space", body: "We verify the doors, rooms, exterior areas and priorities that matter most." },
+  { icon: Camera, title: "Confirm placement", body: "Camera angles, AP locations, mounting conditions and cable routes get checked against the real site." },
+  { icon: FileCheck, title: "Finalize the proposal", body: "Your AI range becomes a field-verified scope you can approve, adjust or phase." },
+];
 
 export function WalkthroughWarmupSection() {
-  const scrollToId = (id: string) => {
-    if (typeof document === "undefined") return;
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <motion.section
-      className="relative w-full px-4 py-12 md:py-16"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
-    >
-      {/* Glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-48 w-[70%] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
+    <section className="relative overflow-hidden bg-[#010512] py-20 sm:py-24">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(37,99,235,.15),transparent_34rem)]" />
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="overflow-hidden rounded-[2rem] border border-sky-400/20 bg-[linear-gradient(135deg,rgba(8,17,34,.98),rgba(2,6,23,.94))] p-6 shadow-[0_28px_90px_rgba(2,6,23,.45)] sm:p-9 lg:p-12">
+          <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.28em] text-sky-300">Next step</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Turn the AI estimate into a real install plan.</h2>
+              <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">The walkthrough is where SmartNET verifies the details software cannot see from a questionnaire alone.</p>
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[.06] px-4 py-2 text-xs font-semibold text-emerald-200"><CheckCircle2 className="h-4 w-4" /> No work begins until you approve the final scope.</div>
+            </div>
 
-      <div className="mx-auto max-w-6xl space-y-8">
-        {/* Header */}
-        <div className="mx-auto max-w-3xl text-center space-y-2">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-sky-300/70">
-            Before you pick a time
-          </p>
-          <h2 className="text-2xl font-semibold text-slate-50 md:text-3xl">
-            What actually happens on your SmartNET walkthrough
-          </h2>
-          <p className="text-sm text-slate-300/80 md:text-base">
-            Whether it’s virtual or on-site, this isn’t a sales pitch. It’s a
-            short working session to shape a clean, realistic install plan
-            around your space.
-          </p>
-        </div>
+            <div className="grid gap-3">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                return <div key={step.title} className="flex gap-4 rounded-2xl border border-sky-400/12 bg-[#020617]/55 p-4"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-400/20 bg-sky-400/10 text-sky-300"><Icon className="h-5 w-5" /></span><div><p className="text-[.6rem] font-bold uppercase tracking-[.18em] text-slate-600">0{index + 1}</p><h3 className="mt-1 text-base font-bold text-white">{step.title}</h3><p className="mt-1 text-sm leading-6 text-slate-400">{step.body}</p></div></div>;
+              })}
+            </div>
+          </div>
 
-        {/* Note */}
-        <div className="flex items-center justify-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-900/40 px-4 py-1.5 text-[0.75rem] text-emerald-100 shadow-[0_0_14px_rgba(16,185,129,0.45)] backdrop-blur-sm">
-            ● No work is scheduled until you approve the final quote.
+          <div className="mt-10 flex flex-col gap-3 border-t border-sky-400/10 pt-7 sm:flex-row">
+            <button type="button" onClick={() => scrollToId("smartnet-generator")} className="rounded-xl border border-sky-400/20 bg-[#020617] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-sky-400/40 hover:text-white">Adjust my estimate</button>
+            <button type="button" onClick={() => scrollToId("booking-calendar")} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 px-6 py-3 text-sm font-bold text-white shadow-[0_0_28px_rgba(37,99,235,.35)] transition hover:brightness-110">Schedule walkthrough <MoveRight className="h-4 w-4" /></button>
           </div>
         </div>
-
-        {/* 3 Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <WarmupCard
-            icon={<ClipboardList className="h-5 w-5 text-cyan-300" />}
-            title="Walk the space together"
-            desc="We review doors, driveways, parking and the rooms that matter most, so your system is designed around how you actually use the property."
-          />
-
-          <WarmupCard
-            icon={<Camera className="h-5 w-5 text-cyan-300" />}
-            title="Lock in angles & wiring paths"
-            desc="We confirm camera angles, AP locations and clean cable routes so nothing surprises you on install day."
-          />
-
-          <WarmupCard
-            icon={<FileCheck className="h-5 w-5 text-cyan-300" />}
-            title="Turn AI range into a real quote"
-            desc="Your AI estimate becomes a clear, itemized proposal you can approve, tweak or scale back before any work begins."
-          />
-        </div>
-
-        {/* Buttons */}
-        <div className="flex flex-col items-center justify-center gap-3 pt-4 md:flex-row md:gap-4">
-          {/* 🔹 FIXED: this now points to your wizard section id */}
-          <button
-            type="button"
-            onClick={() => scrollToId("smartnet-generator")}
-            className="rounded-full border border-slate-600 bg-slate-900/70 px-6 py-2 text-[0.78rem] font-medium text-slate-100 shadow-sm transition hover:border-sky-400 hover:text-sky-100"
-          >
-            Adjust my SmartNET estimate
-          </button>
-
-          <button
-            type="button"
-            onClick={() => scrollToId("booking-calendar")}
-            className="rounded-full bg-cyan-400 px-6 py-2 text-[0.78rem] font-semibold text-slate-950 shadow-[0_0_22px_rgba(34,211,238,0.8)] transition hover:bg-cyan-300"
-          >
-            Book my SmartNET walkthrough
-          </button>
-        </div>
       </div>
-    </motion.section>
-  );
-}
-
-function WarmupCard({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="rounded-xl border border-cyan-500/20 bg-slate-950/60 p-4 shadow-[0_0_20px_rgba(8,47,73,0.45)]"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/10">
-          {icon}
-        </div>
-        <p className="text-sm font-semibold text-slate-50">{title}</p>
-      </div>
-      <p className="text-xs text-slate-300/80">{desc}</p>
-    </motion.div>
+    </section>
   );
 }
