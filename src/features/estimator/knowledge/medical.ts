@@ -1,0 +1,1 @@
+export { medicalPlaybook } from "./medical/knowledge-base";

@@ -1,0 +1,1 @@
+export { hospitalityPlaybook } from "./hospitality/index";

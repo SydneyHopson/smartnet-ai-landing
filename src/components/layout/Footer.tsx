@@ -10,20 +10,23 @@ export function Footer() {
         {/* Left Column — Logo + tagline */}
         <div className="space-y-4 md:max-w-sm">
           {/* LOGO — small icon size */}
-          <div className="flex items-center">
-            <Image
-              src="/logos/images/SmartNet3.png"
-              alt="SmartNET Logo"
-              width={70}
-              height={24}
-              className="object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.25)]"
-              priority
-            />
-          </div>
+          <Image
+  src="/logos/images/SmartNet3.png"
+  alt="SmartNET Logo"
+  width={70}
+  height={24}
+  style={{
+    width: "70px",
+    height: "auto",
+  }}
+  className="object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.25)]"
+/>
 
           <p className="text-xs leading-relaxed text-slate-300">
             SmartNET Installation blends field-tested low-voltage installs with{" "}
-            <span className="text-sky-300 font-semibold">AI-powered planning</span>{" "}
+            <span className="font-semibold text-sky-300">
+              AI-powered planning
+            </span>{" "}
             so your cameras, Wi-Fi, and access control feel overbuilt instead of
             overcomplicated.
           </p>
@@ -39,12 +42,14 @@ export function Footer() {
           <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
             Quick links
           </h3>
+
           <ul className="space-y-1.5 text-xs text-slate-300">
             <li>
               <Link href="#estimate" className="transition hover:text-sky-300">
                 Start your SmartNET estimate
               </Link>
             </li>
+
             <li>
               <Link
                 href="#booking-calendar"
@@ -53,6 +58,7 @@ export function Footer() {
                 Book a walkthrough
               </Link>
             </li>
+
             <li>
               <Link
                 href="#project-types"
@@ -61,6 +67,7 @@ export function Footer() {
                 Services & use cases
               </Link>
             </li>
+
             <li>
               <Link
                 href="#faq-section"
@@ -82,7 +89,9 @@ export function Footer() {
             <p className="text-[0.7rem] uppercase tracking-[0.16em] text-slate-500">
               Core metro coverage
             </p>
+
             <p>Atlanta · Stone Mountain · Decatur · Tucker · Duluth · Norcross</p>
+
             <p>Warehouse, retail & light industrial across the metro region.</p>
           </div>
 
@@ -90,6 +99,7 @@ export function Footer() {
             <p className="text-[0.7rem] uppercase tracking-[0.16em] text-slate-500">
               Talk to SmartNET
             </p>
+
             <p>
               Email:{" "}
               <a
@@ -99,6 +109,7 @@ export function Footer() {
                 ReignMobileStudios@gmail.com
               </a>
             </p>
+
             <p>
               Phone / Text:{" "}
               <span className="text-sky-300">770-294-1987</span>
@@ -115,6 +126,7 @@ export function Footer() {
           walkthrough and may vary based on site conditions and equipment
           requirements.
         </p>
+
         <p className="mt-2 text-[0.65rem] leading-relaxed text-slate-500">
           We collect contact and project details only to provide estimates,
           schedule walkthroughs, and communicate regarding your request. We do
@@ -126,6 +138,7 @@ export function Footer() {
       <div className="border-t border-slate-900 bg-black/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-[0.65rem] text-slate-500 sm:flex-row">
           <p>© {year} SmartNET Installation · Powered By ReignMobile</p>
+
           <p className="text-[0.62rem]">
             Low voltage · Cameras · Wi-Fi · Access Control · Small business
             networks.

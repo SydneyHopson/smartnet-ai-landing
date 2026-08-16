@@ -1,0 +1,384 @@
+Folder PATH listing for volume Local Disk
+Volume serial number is 000000BB FE1A:E410
+C:\USERS\SYDNEYHOPSON\SMARTNET-AI-LANDING\SRC
++---app
+|   |   ClientProviders.tsx
+|   |   favicon.ico
+|   |   globals.css
+|   |   layout.tsx
+|   |   page.client.tsx
+|   |   page.tsx
+|   |   
+|   +---api
+|   |   +---booking
+|   |   |   |   route.ts
+|   |   |   |   
+|   |   |   \---followup
+|   |   |           route.ts
+|   |   |           
+|   |   +---estimator
+|   |   |   +---answer
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---design
+|   |   |   |   \---[sessionId]
+|   |   |   |           route.ts
+|   |   |   |           
+|   |   |   +---finalize
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---proposal
+|   |   |   |   \---saved
+|   |   |   |       \---[sessionId]
+|   |   |   |               route.ts
+|   |   |   |               
+|   |   |   +---proposals
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   +---quotes
+|   |   |   |       route.ts
+|   |   |   |       
+|   |   |   \---start
+|   |   |           route.ts
+|   |   |           
+|   |   +---magic-link
+|   |   |   |   route.ts
+|   |   |   |   
+|   |   |   \---[token]
+|   |   |           route.ts
+|   |   |           
+|   |   \---owner
+|   |       +---access
+|   |       |       route.ts
+|   |       |       
+|   |       +---dashboard
+|   |       |       route.ts
+|   |       |       
+|   |       \---dev
+|   |           |   route.ts
+|   |           |   
+|   |           \---clear-test-data
+|   +---owner
+|   |   |   page.tsx
+|   |   |   
+|   |   +---access
+|   |   |       OwnerLogoutButton.tsx
+|   |   |       page.tsx
+|   |   |       
+|   |   +---booking
+|   |   |   \---[id]
+|   |   |           page.tsx
+|   |   |           
+|   |   +---dashboard
+|   |   |   |   page.tsx
+|   |   |   |   
+|   |   |   \---calendar
+|   |   |           page.tsx
+|   |   |           
+|   |   \---logout
+|   |           route.ts
+|   |           
+|   \---quote
+|       \---[token]
+|               page.tsx
+|               
++---components
+|   |   HomeClient.tsx
+|   |   
+|   +---AiEstimator
+|   |       AiEstimatorCard.tsx
+|   |       EstimatorQuestionInput.tsx
+|   |       
+|   +---booking
+|   |       booking-calendar.tsx
+|   |       
+|   +---hero
+|   |       hero-section.tsx
+|   |       
+|   +---layout
+|   |       Footer.tsx
+|   |       
+|   +---marketing
+|   |       equipment-section.tsx
+|   |       faq-section.tsx
+|   |       field-results.tsx
+|   |       final-cta-strip.tsx
+|   |       how-it-works.tsx
+|   |       pricing-preview.tsx
+|   |       project-types-section.tsx
+|   |       service-area.tsx
+|   |       testimonials.tsx
+|   |       trust-bar.tsx
+|   |       walkthrough-warmup.tsx
+|   |       why-smartnet.tsx
+|   |       
+|   +---owner
+|   |       FollowupWalkthroughScheduler.tsx
+|   |       OwnerCalendarClient.tsx
+|   |       OwnerDashboardClient.tsx
+|   |       OwnerLogoutButton.tsx
+|   |       
+|   +---quote
+|   |   |   QuotePDF.tsx
+|   |   |   
+|   |   \---download-pdf.tsx
+|   +---shared
+|   |       language-switcher.tsx
+|   |       
+|   +---smartNetWizard
+|   |       SmartNetEstimateProvider.tsx
+|   |       SmartNetGeneratorSection.tsx
+|   |       
+|   \---ui
+|       |   accordion.tsx
+|       |   badge.tsx
+|       |   button.tsx
+|       |   calendar.tsx
+|       |   card.tsx
+|       |   dialog.tsx
+|       |   dropdown-menu.tsx
+|       |   form.tsx
+|       |   HudBackground.tsx
+|       |   input.tsx
+|       |   label.tsx
+|       |   popover.tsx
+|       |   scroll-area.tsx
+|       |   sheet.tsx
+|       |   textarea.tsx
+|       |   
+|       \---quote
++---features
+|   \---estimator
+|       +---ai
+|       |       azure-estimator-extractor.ts
+|       |       azure-project-patch.ts
+|       |       
+|       +---conversation
+|       |       ai-response.ts
+|       |       answer-normalizer.ts
+|       |       answer-project-patch.ts
+|       |       combined-question-planner.ts
+|       |       conversation-orchestrator.ts
+|       |       conversation-state.ts
+|       |       get-current-estimator-question.ts
+|       |       process-estimator-answer.ts
+|       |       question-planner.ts
+|       |       
+|       +---design
+|       |       design-engine.ts
+|       |       manufacturer-selector.ts
+|       |       scope-generator.ts
+|       |       
+|       +---domain
+|       |       merge-project-patch.ts
+|       |       normalize-project-field-value.ts
+|       |       project-estimate.ts
+|       |       wizard-adapter.ts
+|       |       
+|       +---finalize
+|       |       route.ts
+|       |       
+|       +---knowledge
+|       |   |   condition-evaluator.ts
+|       |   |   datacenter.ts
+|       |   |   hospitality.ts
+|       |   |   industrial.ts
+|       |   |   medical.ts
+|       |   |   multi-location.ts
+|       |   |   office.ts
+|       |   |   playbook-engine.ts
+|       |   |   playbook-registry.ts
+|       |   |   playbook-resolver.ts
+|       |   |   playbook-summary.ts
+|       |   |   playbook-validation.ts
+|       |   |   playbook.ts
+|       |   |   religious.ts
+|       |   |   residential.ts
+|       |   |   restaurant.ts
+|       |   |   warehouse.ts
+|       |   |   
+|       |   +---datacenter
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---education
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---hospitality
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---industrial
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---medical
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       knowledge-base.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---multi-location
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---office
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---religious
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---restaurant
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       knowledge-base.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   +---retail
+|       |   |       ai-guidance.ts
+|       |   |       assumptions.ts
+|       |   |       index.ts
+|       |   |       materials.ts
+|       |   |       mistakes.ts
+|       |   |       questions.ts
+|       |   |       recommendations.ts
+|       |   |       risks.ts
+|       |   |       standards.ts
+|       |   |       upsells.ts
+|       |   |       walkthrough.ts
+|       |   |       
+|       |   \---warehouse
+|       |           ai-guidance.ts
+|       |           assumptions.ts
+|       |           knowledge-base.ts
+|       |           materials.ts
+|       |           mistakes.ts
+|       |           questions.ts
+|       |           recommendations.ts
+|       |           risks.ts
+|       |           walkthrough.ts
+|       |           
+|       +---pricing
+|       |       equipment-recommender.ts
+|       |       pricing-catalog.ts
+|       |       pricing-engine.ts
+|       |       route.ts
+|       |       
+|       +---proposal
+|       |   |   proposal-html.ts
+|       |   |   proposal-package.ts
+|       |   |   sanity-estimator-proposal-store.ts
+|       |   |   
+|       |   \---[sessionId]
+|       |           route.ts
+|       |           
+|       +---quote
+|       |       preliminary-quote.ts
+|       |       sanity-estimator-quote-store.ts
+|       |       
+|       +---scope
+|       |   \---[sessionId]
+|       |           route.ts
+|       |           
+|       \---session
+|           |   estimator-session-store.ts
+|           |   sanity-estimator-session-store.ts
+|           |   
+|           \---[sessionId]
+|                   route.ts
+|                   
++---lib
+|       azure-openai.ts
+|       email.ts
+|       idempotency.ts
+|       identity.ts
+|       sanityClient.ts
+|       sanityWriteClient.ts
+|       utils.ts
+|       
+\---messages
+        en.json
+        es.json
+        

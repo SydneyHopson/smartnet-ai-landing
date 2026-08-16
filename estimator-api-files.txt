@@ -1,0 +1,191 @@
+===== api\estimator\start\route.ts =====
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+import {
+  createEmptyProjectEstimate,
+  projectEstimateSchema,
+  type ProjectEstimate,
+} from "@/features/estimator/domain/project-estimate";
+
+import { startEstimatorConversation } from "@/features/estimator/conversation/conversation-orchestrator";
+
+import { selectPrimaryEstimatorPlaybook } from "@/features/estimator/knowledge/playbook-registry";
+
+import { resolveEstimatorPlaybook } from "@/features/estimator/knowledge/playbook-resolver";
+
+const estimatorSeedSchema = z.object({
+  projectType: z
+    .enum([
+      "residential",
+      "office",
+      "retail",
+      "warehouse",
+      "industrial",
+      "medical",
+      "education",
+      "hospitality",
+      "religious",
+      "multi_location",
+      "other",
+    ])
+    .optional(),
+
+  customerIntent: z.string().optional(),
+
+  squareFootage: z.number().positive().optional(),
+
+  cameras: z.boolean().optional(),
+
+  wifi: z.boolean().optional(),
+
+  accessControl: z.boolean().optional(),
+});
+
+const startEstimatorRequestSchema = z.object({
+  sessionId: z.string().min(1).optional(),
+
+  project: projectEstimateSchema.optional(),
+
+  seed: estimatorSeedSchema.optional(),
+});
+
+function createProjectFromSeed(
+  seed: z.infer<typeof estimatorSeedSchema>
+): ProjectEstimate {
+  const project = createEmptyProjectEstimate();
+
+  project.status = "collecting_scope";
+  project.metadata.source = "wizard";
+
+  if (seed.projectType) {
+    project.property.projectType = seed.projectType;
+  }
+
+  if (seed.customerIntent?.trim()) {
+    project.customerIntent.summary =
+      seed.customerIntent.trim();
+  }
+
+  if (seed.squareFootage) {
+    project.property.squareFootage = {
+      value: seed.squareFootage,
+      confidence: "customer_reported",
+    };
+  }
+
+  if (typeof seed.cameras === "boolean") {
+    project.cameras.requested = seed.cameras;
+  }
+
+  if (typeof seed.wifi === "boolean") {
+    project.wifi.requested = seed.wifi;
+    project.network.requested = seed.wifi;
+  }
+
+  if (typeof seed.accessControl === "boolean") {
+    project.accessControl.requested =
+      seed.accessControl;
+  }
+
+  return projectEstimateSchema.parse(project);
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const rawBody: unknown = await req.json();
+
+    const parsedRequest =
+      startEstimatorRequestSchema.safeParse(rawBody);
+
+    if (!parsedRequest.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Invalid estimator start request.",
+          details: parsedRequest.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const sessionId =
+      parsedRequest.data.sessionId ??
+      crypto.randomUUID();
+
+    let project: ProjectEstimate;
+
+    if (parsedRequest.data.project) {
+      project = parsedRequest.data.project;
+    } else if (parsedRequest.data.seed) {
+      project = createProjectFromSeed(
+        parsedRequest.data.seed
+      );
+    } else {
+      project = createEmptyProjectEstimate();
+    }
+
+    const conversationResult =
+      startEstimatorConversation({
+        sessionId,
+        project,
+      });
+
+    const selectedPlaybook =
+      selectPrimaryEstimatorPlaybook(project);
+
+    const resolvedPlaybook = selectedPlaybook
+      ? resolveEstimatorPlaybook(
+          project,
+          selectedPlaybook
+        )
+      : null;
+
+    return NextResponse.json(
+      {
+        ok: true,
+
+        sessionId,
+
+        project: conversationResult.project,
+
+        conversation:
+          conversationResult.conversation,
+
+        playbook: selectedPlaybook
+          ? {
+              id: selectedPlaybook.id,
+              name: selectedPlaybook.name,
+              version: selectedPlaybook.version,
+              description:
+                selectedPlaybook.description,
+              aiGuidance:
+                selectedPlaybook.aiGuidance,
+            }
+          : null,
+
+        playbookResolution: resolvedPlaybook,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error(
+      "[SmartNET estimator start error]",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Unable to start the SmartNET estimator conversation.",
+      },
+      { status: 500 }
+    );
+  }
+}
+===== estimator session files =====
+
+===== api estimator routes =====
+C:\Users\sydneyhopson\smartnet-ai-landing\src\app\api\estimator\start
+C:\Users\sydneyhopson\smartnet-ai-landing\src\app\api\estimator\start\route.ts

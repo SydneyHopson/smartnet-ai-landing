@@ -57,9 +57,10 @@ export default function OwnerAccessPage() {
             alt="SmartNET"
             width={90}
             height={28}
-            className="object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.35)]"
+            className="h-auto w-[90px] object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.35)]"
             priority
           />
+
           <div className="text-xs text-slate-400">
             Owner Access · Private Console
           </div>
@@ -70,6 +71,7 @@ export default function OwnerAccessPage() {
             <CardTitle className="text-sm text-slate-100">
               Enter credentials
             </CardTitle>
+
             <p className="text-xs text-slate-400">
               This area is for SmartNET operations only.
             </p>
@@ -78,7 +80,10 @@ export default function OwnerAccessPage() {
           <CardContent>
             <form onSubmit={submit} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[0.7rem] text-slate-300">Username</label>
+                <label className="text-[0.7rem] text-slate-300">
+                  Username
+                </label>
+
                 <input
                   value={user}
                   onChange={(e) => setUser(e.target.value)}
@@ -89,7 +94,10 @@ export default function OwnerAccessPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[0.7rem] text-slate-300">Password</label>
+                <label className="text-[0.7rem] text-slate-300">
+                  Password
+                </label>
+
                 <input
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}

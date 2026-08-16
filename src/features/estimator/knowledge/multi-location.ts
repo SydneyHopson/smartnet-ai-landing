@@ -1,0 +1,1 @@
+export { multiLocationPlaybook } from "./multi-location/index";

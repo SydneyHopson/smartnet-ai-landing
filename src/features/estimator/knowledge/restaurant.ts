@@ -1,0 +1,1 @@
+export { restaurantPlaybook } from "./restaurant/knowledge-base";
