@@ -80,7 +80,7 @@ export function calculateEstimate(project: ProjectEstimate): ProjectEstimate {
     estimatedLow: roundToFriendlyPrice(targetSellPrice * lowFactor),
     estimatedHigh: roundToFriendlyPrice(targetSellPrice * highFactor),
     targetMarginPercent,
-    catalogVersion: "smartnet-catalog-2.1.0",
+    catalogVersion: "smartnet-catalog-2.2.0-hybrid",
   };
 
   calculatedProject.installation.estimatedLaborHours = { value: roundQuantity(adjustedLaborHours), confidence: "ai_inferred" };
@@ -90,16 +90,24 @@ export function calculateEstimate(project: ProjectEstimate): ProjectEstimate {
   return projectEstimateSchema.parse(calculatedProject);
 }
 
+function isResidential(project: ProjectEstimate): boolean {
+  return project.property.projectType === "residential";
+}
+
 function addCameraScope(project: ProjectEstimate, accumulator: PricingAccumulator): void {
   if (!project.cameras.requested) return;
   const interiorCount = project.cameras.interiorCount.value ?? 0;
   const exteriorCount = project.cameras.exteriorCount.value ?? 0;
   const specialtyCount = project.cameras.specialtyCount.value ?? 0;
+  const residential = isResidential(project);
 
-  addCatalogItem(accumulator, "camera-dome", interiorCount, "Indoor camera quantity from project discovery.");
-  addCatalogItem(accumulator, "camera-standard", exteriorCount, "Exterior camera quantity from project discovery.");
+  // Home projects use a balanced BOM: value cameras for ordinary coverage,
+  // while specialty cameras remain premium. Commercial keeps the premium
+  // UniFi baseline. Final proposal can upgrade any residential camera.
+  addCatalogItem(accumulator, residential ? "camera-residential-dome" : "camera-dome", interiorCount, residential ? "Residential value camera allowance for normal indoor coverage; premium upgrade remains available." : "Indoor camera quantity from project discovery.");
+  addCatalogItem(accumulator, residential ? "camera-residential-value" : "camera-standard", exteriorCount, residential ? "Residential value PoE camera allowance for normal exterior coverage; premium upgrade remains available." : "Exterior camera quantity from project discovery.");
   addCatalogItem(accumulator, "camera-specialty", specialtyCount, "Specialty-camera allowance pending final model selection.");
-  if (exteriorCount + specialtyCount > 0) addCatalogItem(accumulator, "camera-junction-box", exteriorCount + specialtyCount, "Weatherproof mounting allowance for exterior and specialty cameras.");
+  if (exteriorCount + specialtyCount > 0) addCatalogItem(accumulator, residential ? "camera-junction-box-value" : "camera-junction-box", exteriorCount + specialtyCount, residential ? "Value weatherproof mounting allowance for residential exterior cameras." : "Weatherproof mounting allowance for exterior and specialty cameras.");
 
   const totalCameraCount = interiorCount + exteriorCount + specialtyCount;
   if (totalCameraCount <= 0) return;
@@ -110,7 +118,7 @@ function addCameraScope(project: ProjectEstimate, accumulator: PricingAccumulato
   addCatalogItem(accumulator, "storage-8tb", storageDrives, `Storage allowance based on ${totalCameraCount} cameras and approximately ${recordingDays} days of retention.`);
 
   addPoESwitching(accumulator, totalCameraCount, project);
-  addCatalogItem(accumulator, project.property.projectType === "residential" ? "ups-small" : "ups", 1, "Battery backup allowance for recording and network equipment.");
+  addCatalogItem(accumulator, residential ? "ups-small-value" : "ups", 1, residential ? "Residential value UPS allowance for recording and network equipment." : "Commercial battery backup allowance for recording and network equipment.");
 }
 
 function addWifiScope(project: ProjectEstimate, accumulator: PricingAccumulator): void {
@@ -135,7 +143,7 @@ function addAccessControlScope(project: ProjectEstimate, accumulator: PricingAcc
   const doors = project.accessControl.controlledDoorCount.value ?? 0;
   if (doors <= 0) return;
 
-  if (project.property.projectType === "residential") {
+  if (isResidential(project)) {
     addCatalogItem(accumulator, "door-starter-kit", doors, "Residential single-door access kit allowance per controlled opening.");
     addCatalogItem(accumulator, "door-lock-residential", doors, "Residential electric lock / door interface allowance per controlled opening.");
     const credentialText = project.accessControl.credentialTypes.join(" ").toLowerCase();
@@ -181,24 +189,29 @@ function addCablingScope(project: ProjectEstimate, accumulator: PricingAccumulat
   const doorCount = project.accessControl.controlledDoorCount.value ?? 0;
   const dataRuns = cameraCount + apCount;
   const projectType = project.property.projectType ?? "other";
+  const residential = isResidential(project);
   const averageRunFeet = PROJECT_RUN_FEET[projectType] ?? 130;
-  const doorRunFeet = projectType === "residential" ? 75 : 125;
+  const doorRunFeet = residential ? 75 : 125;
   const inferredCableFeet = Math.ceil((dataRuns * averageRunFeet + doorCount * doorRunFeet) * 1.1);
   const cableFeet = explicitCableFeet ?? inferredCableFeet;
 
   const adjustedCableFeet = project.cabling.existingCablingAvailable === true && explicitCableFeet === null ? Math.ceil(cableFeet * 0.35) : cableFeet;
-  addCatalogItem(accumulator, "cat6", adjustedCableFeet, explicitCableFeet !== null ? "Cable footage supplied during project discovery." : "Cable allowance inferred from device count, project type, average pathway distance and service slack.");
+  addCatalogItem(accumulator, residential ? "cat6-value" : "cat6", adjustedCableFeet, explicitCableFeet !== null ? "Cable footage supplied during project discovery." : residential ? "Residential solid-copper Cat6 value allowance inferred from device count and pathway distance." : "Commercial cable allowance inferred from device count, project type, average pathway distance and service slack.");
 
   const endpointCount = dataRuns + doorCount;
-  addCatalogItem(accumulator, "cable-endpoint", endpointCount, "Termination, certification/test and labeling allowance per connected endpoint.");
-  if (endpointCount >= 8 && project.network.existingRack !== true) addCatalogItem(accumulator, "patch-panel-24", Math.max(1, Math.ceil(endpointCount / 24)), "Patch-panel allowance for organized structured cabling.");
+  addCatalogItem(accumulator, residential ? "cable-endpoint-value" : "cable-endpoint", endpointCount, residential ? "Residential bulk keystone, termination, test and label allowance per endpoint." : "Commercial termination, certification/test and labeling allowance per endpoint.");
+  if (endpointCount >= 8 && project.network.existingRack !== true) addCatalogItem(accumulator, residential ? "patch-panel-24-value" : "patch-panel-24", Math.max(1, Math.ceil(endpointCount / 24)), residential ? "Residential value patch-panel allowance for organized structured cabling." : "Commercial patch-panel allowance for organized structured cabling.");
   if (explicitCableFeet === null && adjustedCableFeet > 0) project.cabling.estimatedCableFeet = { value: adjustedCableFeet, confidence: "ai_inferred" };
 }
 
 function addRackScope(project: ProjectEstimate, accumulator: PricingAccumulator): void {
   if (project.network.rackRequired !== true || project.network.existingRack === true) return;
   const endpoints = getCameraCount(project) + (project.wifi.estimatedAccessPointCount.value ?? 0) + (project.accessControl.controlledDoorCount.value ?? 0);
-  addCatalogItem(accumulator, endpoints > 24 ? "rack-full" : "rack-small", 1, endpoints > 24 ? "Floor-rack allowance based on project scale." : "Wall-rack allowance for network and security equipment.");
+  if (isResidential(project) && endpoints <= 24) {
+    addCatalogItem(accumulator, "rack-small-value", 1, "Residential 6U/9U wall-cabinet allowance sized for the proposed equipment.");
+    return;
+  }
+  addCatalogItem(accumulator, endpoints > 24 ? "rack-full" : "rack-small", 1, endpoints > 24 ? "Floor-rack allowance based on project scale." : "Commercial wall-rack allowance for network and security equipment.");
 }
 
 function calculateLaborComplexityMultiplier(project: ProjectEstimate): number {
@@ -206,7 +219,7 @@ function calculateLaborComplexityMultiplier(project: ProjectEstimate): number {
   const difficulty = project.installation.difficultyLevel;
   multiplier *= difficulty === "moderate" ? 1.15 : difficulty === "difficult" ? 1.35 : difficulty === "specialty" ? 1.55 : 1;
 
-  const residential = project.property.projectType === "residential";
+  const residential = isResidential(project);
   const construction = project.property.constructionType;
   if (construction === "existing_finished") multiplier *= residential ? 1.08 : 1.15;
   if (construction === "renovation") multiplier *= 1.08;
@@ -246,19 +259,19 @@ function calculateTravelCost(project: ProjectEstimate): number {
 }
 
 function calculateProjectConsumables(materialCost: number, project: ProjectEstimate): number {
-  let rate = project.property.projectType === "residential" ? 0.05 : 0.08;
+  let rate = isResidential(project) ? 0.05 : 0.08;
   if (project.cabling.wiringStyle === "exposed") rate += 0.04;
   if (project.cabling.trenchingRequired === true) rate += 0.04;
   if (project.cabling.fireStoppingRequired === true) rate += 0.03;
-  return Math.max(project.property.projectType === "residential" ? 45 : 60, materialCost * rate);
+  return Math.max(isResidential(project) ? 45 : 60, materialCost * rate);
 }
 
 function calculateMobilizationCost(project: ProjectEstimate): number {
-  return project.property.projectType && project.property.projectType !== "residential" ? 225 : 95;
+  return project.property.projectType && !isResidential(project) ? 225 : 95;
 }
 
 function determineTargetMarginPercent(project: ProjectEstimate, directCost: number): number {
-  const residential = project.property.projectType === "residential";
+  const residential = isResidential(project);
   let margin = residential ? (directCost < 2500 ? 30 : directCost < 7500 ? 26 : 24) : (directCost < 2500 ? 32 : directCost < 7500 ? 29 : 27);
   if (["difficult", "specialty"].includes(project.installation.difficultyLevel)) margin += 2;
   if (project.installation.afterHoursRequired === true) margin += 1;
