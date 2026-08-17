@@ -34,6 +34,8 @@ yarn-error.log*
 # local estimator / terminal dump artifacts
 /estimator-*-files.txt
 /estimator-*.txt
+/smartnet-all-files.txt
+/src-tree.txt
 /cls
 /curl
 /debug-*.txt
