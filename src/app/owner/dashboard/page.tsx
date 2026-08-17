@@ -14,13 +14,13 @@ export type BookingStatus =
 export type OwnerBooking = {
   id: string;
   customerName: string;
-  customerEmail?: string;
-  customerPhone?: string;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
   bookingType: "initial" | "followup";
   scheduledForISO: string | null;
   status: BookingStatus;
-  roughLow?: number;
-  roughHigh?: number;
+  roughLow?: number | null;
+  roughHigh?: number | null;
 };
 
 export type ReminderItem = {
