@@ -13,8 +13,8 @@ const navItems = [
   { label: "FAQ", href: "#faq" },
 ];
 
-const BUSINESS_PHONE_DISPLAY = "(470) 226-7705";
-const BUSINESS_PHONE_HREF = "tel:+14702267705";
+const BUSINESS_PHONE_DISPLAY = "(404) 966-5499";
+const BUSINESS_PHONE_HREF = "tel:+14049665499";
 
 export function SiteNavigation() {
   const [open, setOpen] = React.useState(false);
