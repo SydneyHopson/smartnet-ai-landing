@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { Building2, CircuitBoard, Home, ShieldCheck, Store, Warehouse } from "lucide-react";
 
 const results = [
-  { icon: Home, number: "01", title: "Residential coverage", lead: "Driveway, porch and backyard dialed in", detail: "Camera placement, attic paths and Wi-Fi coverage planned as one system instead of separate add-ons.", image: "/hero/images/smartnet-ai-building-v3.png", position: "object-[70%_45%]" },
-  { icon: Store, number: "02", title: "Retail & studio", lead: "Clear views where business happens", detail: "Entrances, service areas and POS zones designed around glare, foot traffic and daily operations.", image: "/trustbar/smartnet-badge.png", position: "object-center" },
-  { icon: Warehouse, number: "03", title: "Warehouse & dock", lead: "Bays, lanes and perimeter under control", detail: "High-value areas, loading points and future expansion considered before cable ever gets pulled.", image: "/hero/images/smartnet-ai-building-v3.png", position: "object-[25%_55%]" },
-  { icon: Building2, number: "04", title: "Office environments", lead: "Lobby, corridors and IT tied together", detail: "Security, network and future access control planned around the same backbone.", image: "/logos/images/SmartNet3.png", position: "object-center" },
-  { icon: ShieldCheck, number: "05", title: "Exterior security", lead: "Lots, gates and side entries stay visible", detail: "Mounting height, lighting, weather and service access all shape the final placement.", image: "/trustbar/smartnet-badge21.png", position: "object-center" },
-  { icon: CircuitBoard, number: "06", title: "Network backbone", lead: "The quiet layer that keeps it all working", detail: "Rack layout, labels, switching and documentation make upgrades cleaner years after install.", image: "/trustbar/smartnet-badge34.png", position: "object-center" },
+  { icon: Home, number: "01", title: "Residential coverage", lead: "Driveway, porch and backyard dialed in", detail: "Camera placement, attic paths and Wi-Fi coverage planned as one system instead of separate add-ons.", image: "/styling/images/residential-coverage-security.png", position: "object-center" },
+  { icon: Store, number: "02", title: "Retail & studio", lead: "Clear views where business happens", detail: "Entrances, service areas and POS zones designed around glare, foot traffic and daily operations.", image: "/styling/images/restaurant-pos-security.png", position: "object-center" },
+  { icon: Warehouse, number: "03", title: "Warehouse & dock", lead: "Bays, lanes and perimeter under control", detail: "High-value areas, loading points and future expansion considered before cable ever gets pulled.", image: "/styling/images/warehouse-dock-infrastructure-v2.png", position: "object-center" },
+  { icon: Building2, number: "04", title: "Office environments", lead: "Lobby, corridors and IT tied together", detail: "Security, network and future access control planned around the same backbone.", image: "/styling/images/office-network-security-infrastructure.png", position: "object-center" },
+  { icon: ShieldCheck, number: "05", title: "Exterior security", lead: "Lots, gates and side entries stay visible", detail: "Mounting height, lighting, weather and service access all shape the final placement.", image: "/styling/images/exterior-security-perimeter.png", position: "object-center" },
+  { icon: CircuitBoard, number: "06", title: "Network backbone", lead: "The quiet layer that keeps it all working", detail: "Rack layout, labels, switching and documentation make upgrades cleaner years after install.", image: "/styling/images/network-backbone-infrastructure.png", position: "object-center" },
 ];
 
 export function FieldResultsSection() {
@@ -31,9 +31,9 @@ export function FieldResultsSection() {
             const Icon = item.icon;
             return (
               <motion.article key={item.number} initial={{ opacity: 0, x: index % 2 ? 18 : -18 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: .2 }} transition={{ duration: .35, delay: index * .04 }} whileHover={{ scale: 1.012 }} className="group relative min-h-[330px] overflow-hidden rounded-2xl border border-sky-400/15 bg-[#07101f] shadow-[0_18px_60px_rgba(2,6,23,.3)]">
-                <Image src={item.image} alt="" fill sizes="(max-width:1024px) 100vw, 50vw" className={`object-cover ${item.position} opacity-35 transition duration-700 group-hover:scale-105 group-hover:opacity-50`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/80 to-[#020617]/20" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-950/55 via-transparent to-sky-950/20" />
+                <Image src={item.image} alt="" fill sizes="(max-width:1024px) 100vw, 50vw" className={`object-cover ${item.position} opacity-42 saturate-90 transition duration-700 group-hover:scale-105 group-hover:opacity-58 group-hover:saturate-100`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/75 to-[#020617]/10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-950/45 via-transparent to-sky-950/15" />
                 <div className="absolute left-5 top-5 flex h-12 w-12 items-center justify-center rounded-xl border border-sky-300/30 bg-[#03101f]/80 text-sky-200 backdrop-blur-md"><Icon className="h-5 w-5" /></div>
                 <span className="absolute right-5 top-5 font-mono text-sm font-black text-sky-200/50">{item.number}</span>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
