@@ -17,13 +17,17 @@ export function Footer() {
       <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_.7fr_.9fr]">
           <div className="max-w-xl">
-            <div className="flex items-center gap-3">
-              <div className="relative h-14 w-14">
-                <Image src="/logos/images/smartnet3.png" alt="SmartNET" fill sizes="56px" className="object-contain drop-shadow-[0_0_18px_rgba(56,189,248,.35)]" />
-              </div>
-              <div><p className="text-xl font-black uppercase tracking-[.12em] text-white">SMART<span className="text-blue-500">NET</span></p><p className="text-[.6rem] font-bold uppercase tracking-[.24em] text-sky-300">Installations</p></div>
+            <div className="relative h-24 w-[280px] max-w-full">
+              <div className="pointer-events-none absolute inset-4 rounded-full bg-sky-500/10 blur-2xl" />
+              <Image
+                src="/logos/images/smartnet-installation-logo-2026.png"
+                alt="SmartNET Installation LLC"
+                fill
+                sizes="280px"
+                className="relative object-contain object-left drop-shadow-[0_0_18px_rgba(56,189,248,.3)]"
+              />
             </div>
-            <p className="mt-5 max-w-lg text-sm leading-6 text-slate-400">AI-assisted project planning and professional low-voltage installation for security cameras, Wi-Fi, networking, access control and structured cabling.</p>
+            <p className="mt-4 max-w-lg text-sm leading-6 text-slate-400">AI-assisted project planning and professional low-voltage installation for security cameras, Wi-Fi, networking, access control and structured cabling.</p>
             <p className="mt-4 text-xs text-slate-600">Atlanta, Georgia · Residential and commercial projects</p>
           </div>
 
