@@ -18,7 +18,11 @@ type BookingPayload = {
   estimate: SmartNetEstimateSnapshot | null;
 };
 
-const DEFAULT_NOTIFY_EMAIL = "Karatesyd@icloud.com";
+const SMARTNET_NOTIFY_EMAILS = [
+  "farhad@smartnetinstallation.ai",
+  "shopson@smartnetinstallation.ai",
+  "info@smartnetinstallation.ai",
+];
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
@@ -71,7 +75,7 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const ownerBookingUrl = `${appUrl}/owner/booking/${bookingDoc._id}`;
     const ownerEnvEmail = process.env.SMARTNET_BOOKING_EMAIL?.trim() || "";
-    const recipients = Array.from(new Set([ownerEnvEmail, DEFAULT_NOTIFY_EMAIL].filter(Boolean)));
+    const recipients = Array.from(new Set([...SMARTNET_NOTIFY_EMAILS, ownerEnvEmail].filter(Boolean)));
     const datePretty = new Date(body.dateISO).toLocaleDateString("en-US", { dateStyle: "full", timeZone: "America/New_York" });
 
     const appointmentGuidance = isPhone
