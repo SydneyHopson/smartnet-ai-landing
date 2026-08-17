@@ -28,6 +28,7 @@ import { ServiceAreaSection } from "@/components/marketing/service-area";
 import { FaqSection } from "@/components/marketing/faq-section";
 import { WalkthroughWarmupSection } from "@/components/marketing/walkthrough-warmup";
 import { Footer } from "@/components/layout/Footer";
+import { SiteNavigation } from "@/components/layout/site-navigation";
 
 type MagicLinkEstimate = CalendarEstimate;
 
@@ -78,8 +79,6 @@ function HomeShell() {
   const calendarEstimate: CalendarEstimate | undefined = React.useMemo(() => {
     const project = estimator.project;
 
-    // A restored magic-link snapshot stays attached until a new estimator
-    // session creates a fresher ProjectEstimate.
     if (!project) return restoredEstimate;
 
     const projectType = project.property?.projectType ?? estimate.projectType;
@@ -125,15 +124,16 @@ function HomeShell() {
   }, []);
 
   return (
-    <main className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
+    <main id="top" className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
       <ResumeLoader onRestore={handleRestore} />
+      <SiteNavigation />
 
       <HeroSection />
       <TrustBar />
       <SmartNetGeneratorSection startOnSummary={hasResumeToken} />
 
       <WalkthroughWarmupSection />
-      <section id="booking-calendar" className="border-t border-sky-500/10 bg-[#020617]">
+      <section id="booking-calendar" className="scroll-mt-20 border-t border-sky-500/10 bg-[#020617]">
         <BookingCalendarSection estimate={calendarEstimate} onConfirmBooking={handleConfirmBooking} />
       </section>
 
