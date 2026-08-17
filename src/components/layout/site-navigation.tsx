@@ -21,8 +21,12 @@ export function SiteNavigation() {
 
   const goTo = React.useCallback((href: string) => {
     setOpen(false);
-    const target = document.querySelector(href);
-    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    const target = document.querySelector<HTMLElement>(href);
+    if (target) {
+      const navOffset = 76;
+      const top = target.getBoundingClientRect().top + window.scrollY - navOffset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
   }, []);
 
   return (
@@ -40,7 +44,7 @@ export function SiteNavigation() {
 
         <nav className="ml-auto hidden items-center gap-1 xl:flex" aria-label="Primary navigation">
           {navItems.map((item) => (
-            <button key={item.href} onClick={() => goTo(item.href)} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/5 hover:text-white">
+            <button key={item.href} type="button" onClick={() => goTo(item.href)} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/5 hover:text-white">
               {item.label}
             </button>
           ))}
@@ -52,10 +56,10 @@ export function SiteNavigation() {
             <span className="hidden lg:inline">{BUSINESS_PHONE_DISPLAY}</span>
             <span className="lg:hidden">Call</span>
           </a>
-          <button onClick={() => goTo("#smartnet-generator")} className="hidden rounded-xl bg-sky-400 px-4 py-2 text-xs font-black text-slate-950 shadow-[0_0_24px_rgba(56,189,248,.2)] transition hover:bg-sky-300 md:block">
+          <button type="button" onClick={() => goTo("#smartnet-generator")} className="hidden rounded-xl bg-sky-400 px-4 py-2 text-xs font-black text-slate-950 shadow-[0_0_24px_rgba(56,189,248,.2)] transition hover:bg-sky-300 md:block">
             Start AI Estimate
           </button>
-          <button onClick={() => setOpen((value) => !value)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white xl:hidden" aria-label="Toggle navigation" aria-expanded={open}>
+          <button type="button" onClick={() => setOpen((value) => !value)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white xl:hidden" aria-label="Toggle navigation" aria-expanded={open}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -65,7 +69,7 @@ export function SiteNavigation() {
         <div className="border-t border-white/10 bg-[#020617]/98 px-4 py-4 shadow-2xl xl:hidden">
           <div className="mx-auto grid max-w-7xl gap-2 sm:grid-cols-2">
             {navItems.map((item) => (
-              <button key={item.href} onClick={() => goTo(item.href)} className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-left text-sm font-semibold text-slate-200 transition hover:border-sky-400/20 hover:bg-sky-400/5">
+              <button key={item.href} type="button" onClick={() => goTo(item.href)} className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-left text-sm font-semibold text-slate-200 transition hover:border-sky-400/20 hover:bg-sky-400/5">
                 {item.label}
               </button>
             ))}
