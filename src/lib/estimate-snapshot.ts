@@ -58,9 +58,18 @@ export function getSquareFootage(estimate: SmartNetEstimateSnapshot | null | und
 
 export function getCameraCount(estimate: SmartNetEstimateSnapshot | null | undefined): number | null {
   if (!estimate || !isRecord(estimate.cameras)) return null;
-  const direct = readQuantity(estimate.cameras.quantity ?? estimate.cameras.count ?? estimate.cameras.cameraCount ?? estimate.cameras.total);
+
+  const cameras = estimate.cameras;
+  const direct = readQuantity(
+    cameras.quantity ?? cameras.count ?? cameras.cameraCount ?? cameras.total
+  );
+
   if (direct !== null) return direct;
-  const values = ["interiorCount", "exteriorCount", "specialtyCount"].map((key) => readQuantity(estimate.cameras?.[key]));
+
+  const values = ["interiorCount", "exteriorCount", "specialtyCount"].map((key) =>
+    readQuantity(cameras[key])
+  );
+
   if (values.every((value) => value === null)) return null;
   return values.reduce<number>((sum, value) => sum + (value ?? 0), 0);
 }
