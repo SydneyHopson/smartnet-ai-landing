@@ -1,69 +1,90 @@
 "use client";
 
-import type { FC, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import type { FC } from "react";
 import Link from "next/link";
-import {
-  Activity, ArrowRight, BarChart3, Bell, BriefcaseBusiness, CalendarDays,
-  CircleDollarSign, Clock3, FileText, LayoutDashboard, Menu, Network,
-  Search, ShieldCheck, Sparkles, Trash2, TriangleAlert, Users, UserRoundSearch, X, Zap,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { BarChart3, BriefcaseBusiness, CalendarDays, FileText, LayoutDashboard, Network, ShieldCheck, Users, UserRoundSearch } from "lucide-react";
 import { OwnerLogoutButton } from "../../app/owner/access/OwnerLogoutButton";
-import type { BookingStatus, OwnerDashboardData } from "@/app/owner/dashboard/page";
+import type { OwnerDashboardData } from "@/app/owner/dashboard/page";
 
 type Props = OwnerDashboardData;
-type ApiResponse = { ok?: boolean; data?: OwnerDashboardData; bookings?: OwnerDashboardData["bookings"] };
-type DeleteTarget = { id: string; name: string } | null;
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/owner/dashboard" },
   { label: "Calendar", icon: CalendarDays, href: "/owner/dashboard/calendar" },
   { label: "Leads", icon: UserRoundSearch, href: "#leads" },
-  { label: "Walkthroughs", icon: ShieldCheck, href: "/owner/walkthroughs" }, { label: "Jobs", icon: BriefcaseBusiness, href: "/owner/jobs" },
-  { label: "Quotes", icon: FileText }, { label: "Customers", icon: Users }, { label: "Reports", icon: BarChart3 },
+  { label: "Walkthroughs", icon: ShieldCheck, href: "/owner/walkthroughs" },
+  { label: "Jobs", icon: BriefcaseBusiness, href: "/owner/jobs" },
+  { label: "Quotes", icon: FileText, href: "/owner/quotes" },
+  { label: "Customers", icon: Users },
+  { label: "Reports", icon: BarChart3 },
 ];
-const statusAccent: Record<BookingStatus,string> = { new:"border-blue-400/30 bg-blue-500/10 text-blue-300", scheduled:"border-cyan-400/30 bg-cyan-500/10 text-cyan-300", followup:"border-violet-400/30 bg-violet-500/10 text-violet-300", completed:"border-emerald-400/30 bg-emerald-500/10 text-emerald-300", unknown:"border-slate-600 bg-slate-800 text-slate-300" };
-const money=(v:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(v);
-const dateTime=(iso:string|null)=>{if(!iso)return"Not scheduled";const d=new Date(iso);return Number.isNaN(d.getTime())?"Unknown":d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});};
-function Card({children,className=""}:{children:ReactNode;className?:string}){return <div className={`rounded-2xl border border-cyan-400/10 bg-[linear-gradient(145deg,rgba(8,18,36,.95),rgba(3,10,24,.97))] shadow-[0_18px_70px_rgba(0,0,0,.32)] ${className}`}>{children}</div>}
 
-export const OwnerDashboardClient:FC<Props>=(props)=>{
- const [apiData,setApiData]=useState<OwnerDashboardData|null>(null),[menu,setMenu]=useState(false),[query,setQuery]=useState(""),[deleting,setDeleting]=useState<string|null>(null),[deleteTarget,setDeleteTarget]=useState<DeleteTarget>(null),[notice,setNotice]=useState<string|null>(null);
- async function refresh(){try{const r=await fetch("/api/owner/dashboard",{cache:"no-store"});const j:ApiResponse=await r.json();const n=j.data??(j.bookings?j as OwnerDashboardData:null);if(n)setApiData(n);}catch{}}
- useEffect(()=>{void refresh()},[]);
- useEffect(()=>{if(!deleteTarget)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape"&&!deleting)setDeleteTarget(null)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[deleteTarget,deleting]);
- useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(null),3200);return()=>window.clearTimeout(t)},[notice]);
- const raw=apiData??props; const data:OwnerDashboardData={bookings:raw.bookings??[],reminders:raw.reminders??[],leadEvents:raw.leadEvents??[],kpis:raw.kpis??{activeLeads:0,upcomingWalkthroughs:0,openFollowups:0,completedJobs:0}};
- const pipelineValue=useMemo(()=>data.bookings.reduce((s,b)=>s+(b.roughHigh??b.roughLow??0),0),[data.bookings]);
- const filtered=useMemo(()=>{const q=query.trim().toLowerCase();return data.bookings.filter(b=>!q||b.customerName.toLowerCase().includes(q)||b.customerEmail?.toLowerCase().includes(q)||b.customerPhone?.includes(q));},[data.bookings,query]);
- const stages=[{label:"New",value:data.bookings.filter(b=>b.status==="new").length,bar:"bg-blue-500"},{label:"Scheduled",value:data.bookings.filter(b=>b.status==="scheduled").length,bar:"bg-cyan-400"},{label:"Follow-Up",value:data.bookings.filter(b=>b.status==="followup").length,bar:"bg-violet-500"},{label:"Completed",value:data.bookings.filter(b=>b.status==="completed").length,bar:"bg-emerald-400"}];
- const maxStage=Math.max(1,...stages.map(s=>s.value));
- const activity=useMemo(()=>{const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-i));return d});return days.map(d=>({label:d.toLocaleDateString("en-US",{weekday:"short"}).slice(0,1),value:data.leadEvents.filter(e=>{const x=new Date(e.occurredAt);return x.getFullYear()===d.getFullYear()&&x.getMonth()===d.getMonth()&&x.getDate()===d.getDate()}).length}));},[data.leadEvents]);
- const maxActivity=Math.max(1,...activity.map(a=>a.value));
- const upcoming=data.bookings.filter(b=>b.scheduledForISO&&new Date(b.scheduledForISO)>=new Date()).sort((a,b)=>new Date(a.scheduledForISO!).getTime()-new Date(b.scheduledForISO!).getTime()).slice(0,4);
- const recentEvents=data.leadEvents.slice().sort((a,b)=>new Date(b.occurredAt).getTime()-new Date(a.occurredAt).getTime()).slice(0,5);
- async function confirmDelete(){if(!deleteTarget)return;const {id,name}=deleteTarget;setDeleting(id);try{const r=await fetch(`/api/owner/leads/${encodeURIComponent(id)}`,{method:"DELETE"});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Delete failed");setApiData(c=>{const b=c??data;return{...b,bookings:b.bookings.filter(x=>x.id!==id),reminders:b.reminders.filter(x=>x.bookingId!==id),leadEvents:b.leadEvents.filter(x=>x.bookingId!==id)}});setDeleteTarget(null);setNotice(`${name} was deleted.`);await refresh();}catch(e){setDeleteTarget(null);setNotice(e instanceof Error?e.message:"Could not delete lead.")}finally{setDeleting(null)}}
- return <main className="min-h-screen bg-[#020713] text-slate-100"><div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(0,132,255,.14),transparent_30%),radial-gradient(circle_at_85%_10%,rgba(34,211,238,.09),transparent_28%),linear-gradient(rgba(15,34,58,.17)_1px,transparent_1px),linear-gradient(90deg,rgba(15,34,58,.17)_1px,transparent_1px)] bg-[size:auto,auto,40px_40px,40px_40px]"/>
- <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] border-r border-cyan-400/10 bg-[#03101f]/95 px-4 py-6 backdrop-blur-xl lg:flex lg:flex-col"><Brand/><div className="my-6 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent"/><OwnerNav/><div className="mt-auto space-y-3"><div className="rounded-2xl border border-blue-400/15 bg-blue-500/[.06] p-3"><div className="flex items-center gap-2"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/15"><Sparkles className="h-4 w-4 text-blue-300"/></div><div><p className="text-xs font-semibold">SmartNET Admin</p><p className="text-[10px] text-cyan-400">Owner</p></div></div></div><OwnerLogoutButton className="w-full justify-start rounded-xl border-slate-800 bg-transparent text-xs text-slate-500" variant="outline" next="/owner/access"/></div></aside>
- {menu&&<div className="fixed inset-0 z-50 lg:hidden"><button className="absolute inset-0 bg-black/70" onClick={()=>setMenu(false)}/><aside className="relative h-full w-[82%] max-w-[290px] border-r border-cyan-400/15 bg-[#03101f] p-5"><div className="flex items-center justify-between"><Brand/><Button variant="ghost" size="icon" onClick={()=>setMenu(false)}><X className="h-5 w-5"/></Button></div><div className="mt-8"><OwnerNav onNavigate={()=>setMenu(false)}/></div></aside></div>}
- <section className="relative min-h-screen lg:ml-[230px]"><header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-cyan-400/10 bg-[#020713]/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8"><div className="flex items-center gap-3 lg:hidden"><Button variant="ghost" size="icon" onClick={()=>setMenu(true)}><Menu className="h-5 w-5"/></Button><Brand compact/></div><div className="hidden lg:block"><p className="text-sm font-semibold">SmartNET Command Center</p><p className="text-[10px] text-slate-500">Owner operations console</p></div><div className="flex items-center gap-2"><div className="hidden rounded-full border border-emerald-400/15 bg-emerald-500/[.06] px-3 py-1.5 text-[10px] text-emerald-300 sm:block">● Systems Operational</div><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/[.03]"><Bell className="h-4 w-4 text-slate-400"/></div></div></header>
- <div className="mx-auto max-w-[1500px] space-y-5 px-3 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-10"><div><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-cyan-500">Operations Overview</p><h1 className="mt-1 text-2xl font-semibold sm:text-3xl">SmartNET Command Center</h1><p className="mt-1 text-xs text-slate-500">Live pipeline, walkthrough, and lead activity.</p></div>
- <div className="grid grid-cols-2 gap-3 xl:grid-cols-5"><Metric label="Active Leads" value={String(data.kpis.activeLeads)} detail="Open opportunities" icon={<Users className="h-5 w-5 text-blue-300"/>}/><Metric label="Walkthroughs" value={String(data.kpis.upcomingWalkthroughs)} detail="Upcoming visits" icon={<CalendarDays className="h-5 w-5 text-cyan-300"/>}/><Metric label="Follow-Ups" value={String(data.kpis.openFollowups)} detail="Need attention" icon={<Clock3 className="h-5 w-5 text-violet-300"/>}/><Metric label="Completed" value={String(data.kpis.completedJobs)} detail="Closed jobs" icon={<ShieldCheck className="h-5 w-5 text-emerald-300"/>}/><div className="col-span-2 xl:col-span-1"><Metric label="Pipeline Value" value={money(pipelineValue)} detail="Potential revenue" icon={<CircleDollarSign className="h-5 w-5 text-amber-300"/>}/></div></div>
- <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]"><Card className="p-5"><div className="flex items-center justify-between"><div><div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-blue-300"/><p className="text-sm font-semibold">Business Activity</p></div><p className="mt-1 text-[10px] text-slate-600">Lead activity · last 7 days</p></div><span className="rounded-full border border-cyan-400/15 bg-cyan-500/[.05] px-2.5 py-1 text-[9px] text-cyan-300">LIVE</span></div><div className="mt-6 flex h-40 items-end gap-3 sm:h-48 sm:gap-5">{activity.map((a,i)=><div key={i} className="flex h-full flex-1 flex-col justify-end gap-2"><div className="relative flex-1"><div className="absolute inset-x-0 bottom-0 rounded-t-lg bg-gradient-to-t from-blue-600/80 to-cyan-400/70 shadow-[0_0_22px_rgba(34,211,238,.12)] transition-all" style={{height:`${Math.max(7,(a.value/maxActivity)*100)}%`}}/><span className="absolute inset-x-0 text-center text-[9px] text-cyan-200" style={{bottom:`${Math.min(92,Math.max(10,(a.value/maxActivity)*100+3))}%`}}>{a.value}</span></div><p className="text-center text-[9px] text-slate-600">{a.label}</p></div>)}</div></Card>
- <Card className="p-5"><div className="flex items-center gap-2"><Activity className="h-4 w-4 text-cyan-300"/><p className="text-sm font-semibold">Pipeline by Stage</p></div><p className="mt-1 text-[10px] text-slate-600">Lead movement at a glance</p><div className="mt-6 space-y-5">{stages.map(s=><div key={s.label}><div className="mb-2 flex items-center justify-between"><span className="text-[11px] text-slate-400">{s.label}</span><span className="text-xs font-semibold">{s.value}</span></div><div className="h-2 overflow-hidden rounded-full bg-white/[.04]"><div className={`h-full rounded-full ${s.bar} shadow-[0_0_14px_rgba(34,211,238,.18)]`} style={{width:`${s.value?Math.max(8,(s.value/maxStage)*100):0}%`}}/></div></div>)}</div></Card></div>
- <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]"><Card className="overflow-hidden"><div id="leads" className="scroll-mt-24"><div className="flex flex-col gap-3 border-b border-white/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><p className="text-sm font-semibold">Recent Leads</p><p className="text-[10px] text-slate-600">CRM lives inside your Command Center</p></div><div className="flex items-center gap-2 rounded-xl border border-white/5 bg-black/10 px-3"><Search className="h-3.5 w-3.5 text-slate-600"/><Input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search customer" className="h-9 border-0 bg-transparent p-0 text-xs focus-visible:ring-0"/></div></div><div className="divide-y divide-white/5">{filtered.length?filtered.map(b=><div key={b.id} className="grid gap-3 p-4 transition hover:bg-blue-500/[.035] sm:grid-cols-[1.3fr_.9fr_.7fr_auto] sm:items-center"><Link href={`/owner/booking/${b.id}`} className="min-w-0"><p className="truncate text-sm font-medium">{b.customerName}</p><p className="truncate text-[10px] text-slate-500">{b.customerEmail||b.customerPhone||"No contact"}</p></Link><p className="text-xs text-slate-400">{b.roughLow||b.roughHigh?`${money(b.roughLow??0)} – ${money(b.roughHigh??b.roughLow??0)}`:"No estimate"}</p><span className={`w-fit rounded-full border px-2 py-1 text-[9px] font-semibold uppercase ${statusAccent[b.status]}`}>{b.status}</span><div className="flex items-center justify-between gap-2"><Link href={`/owner/booking/${b.id}`} className="flex items-center gap-2 text-[10px] text-slate-500"><span>{dateTime(b.scheduledForISO)}</span><ArrowRight className="h-3.5 w-3.5"/></Link><button disabled={deleting===b.id} onClick={()=>setDeleteTarget({id:b.id,name:b.customerName})} className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-400/15 bg-rose-500/[.06] text-rose-400 hover:bg-rose-500/15 disabled:opacity-40" title="Delete test lead"><Trash2 className="h-4 w-4"/></button></div></div>):<div className="p-10 text-center text-xs text-slate-600">No matching leads.</div>}</div></div></Card>
- <div className="space-y-5"><Card className="p-5"><div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-cyan-300"/><p className="text-sm font-semibold">Upcoming Schedule</p></div><div className="mt-4 space-y-2">{upcoming.length?upcoming.map(b=><Link key={b.id} href={`/owner/booking/${b.id}`} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[.025] p-3 hover:bg-white/[.04]"><div><p className="text-[11px] font-medium">{b.customerName}</p><p className="mt-1 text-[9px] text-slate-600">{dateTime(b.scheduledForISO)}</p></div><ArrowRight className="h-3.5 w-3.5 text-slate-600"/></Link>):<p className="py-5 text-center text-[10px] text-slate-600">Nothing upcoming.</p>}</div></Card><Card className="p-5"><div className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-amber-300"/><p className="text-sm font-semibold">Reminders</p></div><div className="mt-4 grid gap-2">{[["Due Today","today"],["This Week","week"],["Overdue","overdue"]].map(([l,k])=><Mini key={k} label={l} value={data.reminders.filter(r=>r.bucket===k).length}/>)}</div></Card></div></div>
- <div className="grid gap-5 xl:grid-cols-[1fr_.6fr]"><Card className="p-5"><div className="flex items-center gap-2"><Zap className="h-4 w-4 text-blue-300"/><p className="text-sm font-semibold">Recent Activity</p></div><div className="mt-4 grid gap-2 sm:grid-cols-2">{recentEvents.length?recentEvents.map(e=><div key={e.id} className="rounded-xl border border-white/5 bg-white/[.02] p-3"><p className="text-[11px] font-medium">{e.customerName}</p><p className="mt-1 text-[9px] uppercase tracking-wider text-cyan-500">{e.eventType.replaceAll("_"," ")}</p><p className="mt-1 text-[9px] text-slate-700">{dateTime(e.occurredAt)}</p></div>):<p className="text-[10px] text-slate-600">No recent activity.</p>}</div></Card><Card className="p-5"><div className="flex items-center gap-2"><Network className="h-4 w-4 text-cyan-300"/><p className="text-sm font-semibold">Command Status</p></div><div className="mt-4 space-y-3"><Status label="Estimator"/><Status label="Sanity CRM"/><Status label="Owner Console"/></div></Card></div>
- </div><nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-cyan-400/10 bg-[#03101f]/95 px-2 pb-[max(env(safe-area-inset-bottom),.5rem)] pt-2 backdrop-blur-xl lg:hidden"><Mobile label="Home" href="/owner/dashboard" icon={<LayoutDashboard className="h-4 w-4"/>} active/><Mobile label="Calendar" href="/owner/dashboard/calendar" icon={<CalendarDays className="h-4 w-4"/>}/><Mobile label="Leads" href="/owner/dashboard#leads" icon={<Users className="h-4 w-4"/>}/><button onClick={()=>setMenu(true)} className="flex flex-col items-center gap-1 rounded-xl py-2 text-[9px] text-slate-600"><Menu className="h-4 w-4"/>More</button></nav></section>
- {deleteTarget&&<div className="fixed inset-0 z-[100] flex items-end justify-center p-3 sm:items-center sm:p-6"><button aria-label="Close delete confirmation" className="absolute inset-0 bg-[#01040b]/80 backdrop-blur-md" onClick={()=>!deleting&&setDeleteTarget(null)}/><div role="dialog" aria-modal="true" aria-labelledby="delete-lead-title" className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-rose-400/20 bg-[linear-gradient(145deg,rgba(8,18,36,.99),rgba(3,8,20,.99))] shadow-[0_30px_100px_rgba(0,0,0,.65),0_0_55px_rgba(244,63,94,.08)]"><div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-400/70 to-transparent"/><div className="p-5 sm:p-6"><div className="flex items-start gap-4"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-500/10 shadow-[0_0_28px_rgba(244,63,94,.10)]"><TriangleAlert className="h-5 w-5 text-rose-300"/></div><div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[.22em] text-rose-400">Destructive Action</p><h2 id="delete-lead-title" className="mt-1 text-lg font-semibold text-white">Delete {deleteTarget.name}?</h2><p className="mt-2 text-xs leading-5 text-slate-400">This permanently removes the lead and walkthrough record from SmartNET. This action cannot be undone.</p></div></div><div className="mt-5 rounded-2xl border border-rose-400/10 bg-rose-500/[.045] p-3"><p className="text-[10px] leading-4 text-slate-500"><span className="font-semibold text-rose-300">Test cleanup:</span> Use delete for test or duplicate records. Real customer records should be moved through the pipeline instead.</p></div><div className="mt-6 grid grid-cols-2 gap-3"><button disabled={!!deleting} onClick={()=>setDeleteTarget(null)} className="h-11 rounded-xl border border-white/10 bg-white/[.035] text-xs font-semibold text-slate-300 transition hover:bg-white/[.07] disabled:opacity-40">Cancel</button><button disabled={!!deleting} onClick={()=>void confirmDelete()} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-rose-400/25 bg-rose-500/15 text-xs font-semibold text-rose-200 shadow-[0_0_22px_rgba(244,63,94,.08)] transition hover:bg-rose-500/25 disabled:cursor-wait disabled:opacity-50">{deleting?<><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-200/30 border-t-rose-200"/>Deleting...</>:<><Trash2 className="h-4 w-4"/>Delete Lead</>}</button></div></div></div></div>}
- {notice&&<div className="fixed bottom-24 left-1/2 z-[110] -translate-x-1/2 lg:bottom-6"><div className="flex min-w-[260px] items-center gap-3 rounded-2xl border border-cyan-400/15 bg-[#061225]/95 px-4 py-3 text-xs text-slate-200 shadow-[0_20px_60px_rgba(0,0,0,.45)] backdrop-blur-xl"><div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,.8)]"/>{notice}</div></div>}
- </main>;
+const money = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+
+export const OwnerDashboardClient: FC<Props> = (data) => {
+  const pipelineValue = data.bookings.reduce((sum, booking) => sum + (booking.roughHigh ?? booking.roughLow ?? 0), 0);
+
+  return (
+    <main className="min-h-screen bg-[#020713] text-slate-100">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(0,132,255,.14),transparent_30%),radial-gradient(circle_at_85%_10%,rgba(34,211,238,.09),transparent_28%),linear-gradient(rgba(15,34,58,.17)_1px,transparent_1px),linear-gradient(90deg,rgba(15,34,58,.17)_1px,transparent_1px)] bg-[size:auto,auto,40px_40px,40px_40px]" />
+
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] border-r border-cyan-400/10 bg-[#03101f]/95 px-4 py-6 backdrop-blur-xl lg:flex lg:flex-col">
+        <Brand />
+        <div className="my-6 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
+        <nav className="space-y-1">
+          {navItems.map(({ label, icon: Icon, href }) => href ? (
+            <Link key={label} href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs text-slate-400 transition hover:bg-blue-500/10 hover:text-cyan-200">
+              <Icon className="h-4 w-4" />{label}
+            </Link>
+          ) : (
+            <div key={label} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs text-slate-700">
+              <Icon className="h-4 w-4" />{label}
+            </div>
+          ))}
+        </nav>
+        <div className="mt-auto"><OwnerLogoutButton className="w-full justify-start rounded-xl border-slate-800 bg-transparent text-xs text-slate-500" variant="outline" next="/owner/access" /></div>
+      </aside>
+
+      <section className="relative min-h-screen lg:ml-[230px]">
+        <header className="sticky top-0 z-30 border-b border-cyan-400/10 bg-[#020713]/90 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Brand />
+            <span className="rounded-full border border-emerald-400/15 bg-emerald-500/[.06] px-3 py-1.5 text-[10px] text-emerald-300">● Systems Operational</span>
+          </div>
+        </header>
+
+        <div className="relative mx-auto max-w-[1500px] space-y-5 px-3 pb-24 pt-5 sm:px-6 lg:px-8">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-cyan-500">Operations Overview</p><h1 className="mt-1 text-2xl font-semibold sm:text-3xl">SmartNET Command Center</h1><p className="mt-1 text-xs text-slate-500">Live pipeline, walkthrough, and lead activity.</p></div>
+
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+            <Metric label="Active Leads" value={String(data.kpis.activeLeads)} />
+            <Metric label="Walkthroughs" value={String(data.kpis.upcomingWalkthroughs)} />
+            <Metric label="Follow-Ups" value={String(data.kpis.openFollowups)} />
+            <Metric label="Completed" value={String(data.kpis.completedJobs)} />
+            <div className="col-span-2 xl:col-span-1"><Metric label="Pipeline Value" value={money(pipelineValue)} /></div>
+          </div>
+
+          <section id="leads" className="overflow-hidden rounded-2xl border border-cyan-400/10 bg-[linear-gradient(145deg,rgba(8,18,36,.95),rgba(3,10,24,.97))]">
+            <div className="border-b border-white/5 p-5"><h2 className="text-sm font-semibold">Recent Leads</h2><p className="mt-1 text-[10px] text-slate-600">CRM lives inside your Command Center</p></div>
+            <div className="divide-y divide-white/5">
+              {data.bookings.length ? data.bookings.map((booking) => (
+                <Link key={booking.id} href={`/owner/booking/${booking.id}`} className="grid gap-2 p-4 transition hover:bg-blue-500/[.035] sm:grid-cols-[1.4fr_1fr_.7fr] sm:items-center">
+                  <div><p className="text-sm font-medium">{booking.customerName}</p><p className="text-[10px] text-slate-500">{booking.customerEmail || "No email"}</p></div>
+                  <p className="text-xs text-slate-400">{booking.roughLow || booking.roughHigh ? `${money(booking.roughLow ?? 0)} – ${money(booking.roughHigh ?? booking.roughLow ?? 0)}` : "No estimate"}</p>
+                  <span className="w-fit rounded-full border border-cyan-400/15 bg-cyan-500/[.06] px-2 py-1 text-[9px] font-semibold uppercase text-cyan-300">{booking.status}</span>
+                </Link>
+              )) : <div className="p-10 text-center text-xs text-slate-600">No leads yet.</div>}
+            </div>
+          </section>
+        </div>
+
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-cyan-400/10 bg-[#03101f]/95 px-1 py-2 backdrop-blur-xl lg:hidden">
+          {navItems.slice(0,5).map(({ label, icon: Icon, href }) => href ? <Link key={label} href={href} className="flex flex-col items-center gap-1 py-1 text-[9px] text-slate-400"><Icon className="h-4 w-4" />{label}</Link> : null)}
+        </nav>
+      </section>
+    </main>
+  );
 };
-function OwnerNav({onNavigate}:{onNavigate?:()=>void}){return <nav className="space-y-1.5">{navItems.map(i=>i.href?<Link key={i.label} href={i.href} onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${i.label==="Dashboard"?"border border-blue-400/20 bg-blue-500/15 text-white":"text-slate-400 hover:bg-white/[.04] hover:text-white"}`}><i.icon className="h-4 w-4"/>{i.label}</Link>:<div key={i.label} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600"><i.icon className="h-4 w-4"/>{i.label}<span className="ml-auto text-[9px] uppercase">Soon</span></div>)}</nav>}
-function Brand({compact=false}:{compact?:boolean}){return <div className="flex items-center gap-2.5"><div className={`${compact?"h-8 w-8":"h-10 w-10"} flex items-center justify-center rounded-xl border border-blue-400/30 bg-blue-500/10`}><Network className={`${compact?"h-4 w-4":"h-5 w-5"} text-cyan-300`}/></div><div><p className={`${compact?"text-sm":"text-lg"} font-semibold`}>Smart<span className="text-blue-400">NET</span></p>{!compact&&<p className="text-[8px] uppercase tracking-[.3em] text-slate-600">Owner Console</p>}</div></div>}
-function Metric({label,value,detail,icon}:{label:string;value:string;detail:string;icon:ReactNode}){return <Card className="relative overflow-hidden p-4 sm:p-5"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[.03]">{icon}</div><div><p className="text-[9px] uppercase tracking-[.16em] text-slate-600">{label}</p><p className="mt-1 text-xl font-semibold">{value}</p></div></div><p className="mt-3 text-[10px] text-slate-600">{detail}</p></Card>}
-function Mini({label,value}:{label:string;value:number}){return <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[.025] px-3 py-3"><span className="text-[11px] text-slate-500">{label}</span><span className="text-sm font-semibold">{value}</span></div>}
-function Status({label}:{label:string}){return <div className="flex items-center justify-between"><span className="text-[10px] text-slate-500">{label}</span><span className="flex items-center gap-1.5 text-[9px] text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>Online</span></div>}
-function Mobile({label,href,icon,active=false}:{label:string;href:string;icon:ReactNode;active?:boolean}){return <Link href={href} className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[9px] ${active?"text-cyan-300":"text-slate-600"}`}>{icon}{label}</Link>}
+
+function Brand() { return <div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-400/30 bg-blue-500/10"><Network className="h-4 w-4 text-cyan-300" /></div><div><p className="text-sm font-semibold">Smart<span className="text-blue-400">NET</span></p><p className="text-[9px] uppercase tracking-[.24em] text-slate-600">Owner Console</p></div></div>; }
+function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl border border-cyan-400/10 bg-[linear-gradient(145deg,rgba(8,18,36,.95),rgba(3,10,24,.97))] p-4"><p className="text-[9px] uppercase tracking-[.16em] text-slate-600">{label}</p><p className="mt-2 text-xl font-semibold">{value}</p></div>; }
