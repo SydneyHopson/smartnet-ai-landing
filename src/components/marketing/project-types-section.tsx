@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Building2, Church, Home, KeyRound, Store, Warehouse } from "lucide-react";
 
 const projects = [
-  { icon: Home, eyebrow: "Residential", title: "Homes & estates", body: "Driveways, porches, garages, backyards and interior coverage designed around how the property is actually used.", tag: "PERIMETER / WIFI", image: "/styling/images/residential-smart-home-security.png", position: "object-center" },
+  { icon: Home, eyebrow: "Residential", title: "Homes & estates", body: "Driveways, porches, garages, backyards and interior coverage designed around how the property is actually used.", tag: "PERIMETER / WIFI", image: "/styling/images/residential-coverage-security.png", position: "object-center" },
   { icon: Store, eyebrow: "Retail", title: "Shops, salons & studios", body: "Customer entrances, registers, service areas and back rooms covered without turning the space into a camera showroom.", tag: "POS / ENTRY", image: "/styling/images/restaurant-pos-security.png", position: "object-center" },
-  { icon: Warehouse, eyebrow: "Industrial", title: "Warehouses & yards", body: "Dock doors, aisles, loading lanes and perimeter coverage with cable paths planned for serviceability and growth.", tag: "DOCK / AISLE", image: "/styling/images/warehouse-infrastructure-solutions.png", position: "object-center" },
-  { icon: Building2, eyebrow: "Commercial", title: "Offices & suites", body: "Lobbies, corridors, shared spaces, Wi-Fi and IT closets tied together as one clean system.", tag: "LAN / ACCESS", image: "/styling/images/office-network-infrastructure.png", position: "object-center" },
-  { icon: Church, eyebrow: "Community", title: "Churches & gathering spaces", body: "Sanctuaries, classrooms, parking lots and common areas planned with coverage, comfort and privacy in mind.", tag: "COVERAGE / AV", image: "/styling/images/commercial-smartnet-solutions.png", position: "object-center" },
-  { icon: KeyRound, eyebrow: "Hospitality", title: "Rentals & small portfolios", body: "Entry, parking and common-area visibility for short-term rentals and multi-property owners.", tag: "ENTRY / REMOTE", image: "/styling/images/residential-home-security-wifi.png", position: "object-center" },
+  { icon: Warehouse, eyebrow: "Industrial", title: "Warehouses & yards", body: "Dock doors, aisles, loading lanes and perimeter coverage with cable paths planned for serviceability and growth.", tag: "DOCK / AISLE", image: "/styling/images/warehouse-larger-site-solutions.png", position: "object-center" },
+  { icon: Building2, eyebrow: "Commercial", title: "Offices & suites", body: "Lobbies, corridors, shared spaces, Wi-Fi and IT closets tied together as one clean system.", tag: "LAN / ACCESS", image: "/styling/images/office-network-security-infrastructure.png", position: "object-center" },
+  { icon: Church, eyebrow: "Community", title: "Churches & gathering spaces", body: "Sanctuaries, classrooms, parking lots and common areas planned with coverage, comfort and privacy in mind.", tag: "COVERAGE / AV", image: "/styling/images/commercial-security-solutions.png", position: "object-center" },
+  { icon: KeyRound, eyebrow: "Hospitality", title: "Rentals & small portfolios", body: "Entry, parking and common-area visibility for short-term rentals and multi-property owners.", tag: "ENTRY / REMOTE", image: "/styling/images/exterior-security-perimeter.png", position: "object-center" },
 ];
 
 export function ProjectTypesSection() {
@@ -29,8 +29,8 @@ export function ProjectTypesSection() {
             const Icon = item.icon;
             return (
               <motion.article key={item.title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .2 }} transition={{ duration: .35, delay: index * .04 }} whileHover={{ y: -6 }} className="group relative min-h-[330px] overflow-hidden rounded-2xl border border-sky-400/15 bg-[#030817] shadow-[0_20px_70px_rgba(2,6,23,.42)]">
-                <Image src={item.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" className={`object-cover ${item.position} opacity-55 saturate-90 transition duration-700 group-hover:scale-105 group-hover:opacity-70 group-hover:saturate-100`} />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.08)_0%,rgba(2,6,23,.40)_38%,rgba(2,6,23,.98)_82%)]" />
+                <Image src={item.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" className={`object-cover ${item.position} opacity-60 saturate-90 transition duration-700 group-hover:scale-105 group-hover:opacity-75 group-hover:saturate-100`} />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.05)_0%,rgba(2,6,23,.30)_38%,rgba(2,6,23,.96)_82%)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_12%,rgba(56,189,248,.18),transparent_32%)]" />
                 <div className="pointer-events-none absolute right-5 top-5 h-16 w-16 opacity-25 [background-image:linear-gradient(rgba(56,189,248,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,.8)_1px,transparent_1px)] [background-size:10px_10px]" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent" />
