@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const SMARTNET_PHONE = "(404) 966-5499";
+const SMARTNET_PHONE_HREF = "tel:+14049665499";
+
 export function Footer() {
   const year = new Date().getFullYear();
 
@@ -26,15 +29,15 @@ export function Footer() {
               <Link href="#smartnet-generator" className="transition hover:text-white">AI estimator</Link>
               <Link href="#booking-calendar" className="transition hover:text-white">Book walkthrough</Link>
               <Link href="#project-types" className="transition hover:text-white">Project types</Link>
-              <Link href="#faq-section" className="transition hover:text-white">FAQ</Link>
+              <Link href="#faq" className="transition hover:text-white">FAQ</Link>
             </div>
           </div>
 
           <div>
-            <p className="text-[.65rem] font-bold uppercase tracking-[.2em] text-sky-300">Contact</p>
+            <p className="text-[.65rem] font-bold uppercase tracking-[.2em] text-sky-300">Contact SmartNET</p>
             <div className="mt-4 space-y-3 text-sm text-slate-400">
-              <a href="mailto:ReignMobileStudios@gmail.com" className="block transition hover:text-white">ReignMobileStudios@gmail.com</a>
-              <a href="tel:+17702941987" className="block transition hover:text-white">770-294-1987</a>
+              <a href={SMARTNET_PHONE_HREF} className="block text-base font-bold text-white transition hover:text-sky-300">{SMARTNET_PHONE}</a>
+              <p className="text-xs leading-5 text-slate-500">Call SmartNET for estimates, walkthroughs, camera installations, Wi-Fi, networking, access control and structured cabling.</p>
               <p className="text-xs leading-5 text-slate-600">Final scope and pricing are confirmed after project verification and customer approval.</p>
             </div>
           </div>
