@@ -52,13 +52,21 @@ export function Footer() {
         <div className="mt-12 flex flex-col gap-5 border-t border-sky-400/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[.65rem] text-slate-600">© {year} SmartNET Installation. All rights reserved.</p>
 
-          <div className="group relative overflow-hidden rounded-xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[.06] via-sky-400/[.07] to-blue-500/[.06] px-4 py-2.5 shadow-[0_0_28px_rgba(56,189,248,.08)] transition duration-300 hover:border-sky-300/40 hover:shadow-[0_0_38px_rgba(56,189,248,.16)]">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(125,211,252,.12),transparent_65%)] opacity-0 transition duration-300 group-hover:opacity-100" />
-            <div className="relative flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[.65rem]">
-              <span className="uppercase tracking-[.16em] text-slate-500">Powered by</span>
-              <a href={REIGN_MOBILE_PHONE_HREF} aria-label={`Call Reign Mobile Agency at ${REIGN_MOBILE_PHONE}`} className="font-black uppercase tracking-[.14em] text-sky-200 drop-shadow-[0_0_10px_rgba(125,211,252,.45)] transition hover:text-white hover:drop-shadow-[0_0_14px_rgba(125,211,252,.8)]">Reign Mobile Agency</a>
-              <span className="text-slate-700">·</span>
-              <a href={REIGN_MOBILE_PHONE_HREF} className="font-semibold tracking-[.08em] text-slate-400 transition hover:text-sky-200">{REIGN_MOBILE_PHONE}</a>
+          <div className="group relative rounded-xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[.06] via-sky-400/[.07] to-blue-500/[.06] px-4 py-2.5 shadow-[0_0_28px_rgba(56,189,248,.08)] transition duration-300 hover:border-sky-300/40 hover:shadow-[0_0_38px_rgba(56,189,248,.16)] focus-within:border-sky-300/40 focus-within:shadow-[0_0_38px_rgba(56,189,248,.16)]">
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_50%_50%,rgba(125,211,252,.12),transparent_65%)] opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
+            <div className="relative flex items-center justify-center text-[.65rem]">
+              <a href={REIGN_MOBILE_PHONE_HREF} aria-label={`Reign Mobile Agency. Call ${REIGN_MOBILE_PHONE}`} className="peer flex items-center gap-2 outline-none">
+                <span className="uppercase tracking-[.16em] text-slate-500 transition group-hover:text-slate-400 group-focus-within:text-slate-400">Powered by</span>
+                <span className="font-black uppercase tracking-[.14em] text-sky-200 drop-shadow-[0_0_10px_rgba(125,211,252,.45)] transition group-hover:text-white group-hover:drop-shadow-[0_0_14px_rgba(125,211,252,.8)] group-focus-within:text-white group-focus-within:drop-shadow-[0_0_14px_rgba(125,211,252,.8)]">Reign Mobile Agency</span>
+              </a>
+
+              <div className="pointer-events-none absolute bottom-full right-0 mb-3 translate-y-2 opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                <div className="relative rounded-lg border border-sky-300/25 bg-[#050b18]/95 px-3 py-2 text-center shadow-[0_0_30px_rgba(56,189,248,.16)] backdrop-blur-md">
+                  <p className="whitespace-nowrap text-[.58rem] font-bold uppercase tracking-[.15em] text-slate-500">Website & AI consulting</p>
+                  <p className="mt-1 whitespace-nowrap text-xs font-bold tracking-[.08em] text-sky-200">{REIGN_MOBILE_PHONE}</p>
+                  <span className="absolute right-6 top-full h-2 w-2 -translate-y-1 rotate-45 border-b border-r border-sky-300/25 bg-[#050b18]" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
