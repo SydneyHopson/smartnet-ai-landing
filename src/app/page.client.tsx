@@ -29,26 +29,11 @@ import { FaqSection } from "@/components/marketing/faq-section";
 import { WalkthroughWarmupSection } from "@/components/marketing/walkthrough-warmup";
 import { Footer } from "@/components/layout/Footer";
 
-type MagicLinkEstimate = {
-  projectType?: string;
-  squareFootage?: number;
-  focus?: string[];
-  coverageProfile?: string;
-  wifiLayout?: string;
-  doorsAccess?: string;
-  extras?: string[];
-  wiringStyle?: string;
-  rackLocation?: string;
-  timeline?: string;
-  roughLow?: number;
-  roughHigh?: number;
-  notes?: string;
-};
+type MagicLinkEstimate = CalendarEstimate;
 
 function ResumeLoader() {
   const searchParams = useSearchParams();
   const resumeToken = searchParams.get("resumeToken");
-
   const { hydrateFromMagicLink } = useSmartNetEstimate() as {
     hydrateFromMagicLink?: (estimate: MagicLinkEstimate) => void;
   };
@@ -57,24 +42,16 @@ function ResumeLoader() {
     if (!resumeToken) return;
     if (sessionStorage.getItem("smartnet:resumed")) return;
 
-    if (!hydrateFromMagicLink) {
-      console.warn(
-        "[SmartNET] hydrateFromMagicLink is not defined on useSmartNetEstimate. " +
-          "Make sure you added it in SmartNetEstimateProvider."
-      );
-      return;
-    }
+    if (!hydrateFromMagicLink) return;
 
     (async () => {
       try {
-        const res = await fetch(`/api/magic-link/${resumeToken}`);
+        const res = await fetch(`/api/magic-link/${resumeToken}`, { cache: "no-store" });
         const data = await res.json();
 
         if (data.ok && !data.isExpired && data.estimate) {
           hydrateFromMagicLink(data.estimate as MagicLinkEstimate);
           sessionStorage.setItem("smartnet:resumed", "1");
-        } else {
-          console.warn("[SmartNET] Invalid or expired resume link");
         }
       } catch (err) {
         console.error("[SmartNET] Error loading magic link:", err);
@@ -86,141 +63,56 @@ function ResumeLoader() {
 }
 
 function HomeShell() {
-  const { estimate } = useSmartNetEstimate();
+  const { estimate, estimator } = useSmartNetEstimate();
   const searchParams = useSearchParams();
   const hasResumeToken = !!searchParams.get("resumeToken");
 
-  const calendarEstimate: CalendarEstimate = React.useMemo(() => {
-    const {
-      projectType,
-      squareFootage,
-      focus,
-      coveragePreset,
-      wifiLayoutPreset,
-      accessPreset,
-      extras,
-      wiringStyle,
-      rackLocation,
-      timeline,
-      roughLow,
-      roughHigh,
-      notes,
-    } = estimate;
+  const calendarEstimate: CalendarEstimate | undefined = React.useMemo(() => {
+    const project = estimator.project;
+
+    // No estimator session means this is a true direct booking. The booking
+    // section remains fully usable, including phone consultations.
+    if (!project) return undefined;
+
+    const projectType = project.property?.projectType ?? estimate.projectType;
+    const squareFootage = project.property?.squareFootage?.value ?? estimate.squareFootage || undefined;
+    const pricingLow = project.pricing?.estimatedLow;
+    const pricingHigh = project.pricing?.estimatedHigh;
 
     const focusLabels: string[] = [];
-    if (focus?.cameras) focusLabels.push("Cameras");
-    if (focus?.wifi) focusLabels.push("Wi-Fi & APs");
-    if (focus?.accessControl) focusLabels.push("Access control");
-
-    const coverageProfile =
-      coveragePreset === "entry"
-        ? "Entry points only"
-        : coveragePreset === "common"
-        ? "Most common areas"
-        : coveragePreset === "full"
-        ? "Full coverage"
-        : undefined;
-
-    const wifiLayout =
-      wifiLayoutPreset === "few"
-        ? "Few APs"
-        : wifiLayoutPreset === "balanced"
-        ? "Balanced coverage"
-        : wifiLayoutPreset === "dense"
-        ? "Dense mesh"
-        : undefined;
-
-    const doorsAccess =
-      accessPreset === "none"
-        ? "No access control"
-        : accessPreset === "fewDoors"
-        ? "Front/back + 1–2 doors"
-        : accessPreset === "manyDoors"
-        ? "Many internal doors"
-        : undefined;
-
-    const extrasLabels =
-      extras
-        ? Object.entries(extras)
-            .filter(([, v]) => v)
-            .map(([k]) => {
-              if (k === "speakers") return "Ceiling speakers";
-              if (k === "wallDisplays") return "Wall displays / screens";
-              if (k === "miniRack") return "Mini network rack";
-              if (k === "batteryUps") return "Battery backup / UPS";
-              return "";
-            })
-            .filter(Boolean)
-        : [];
-
-    const wiringStyleLabel =
-      wiringStyle === "exposed"
-        ? "Exposed conduit runs"
-        : wiringStyle === "hidden"
-        ? "Hidden in walls / ceilings"
-        : wiringStyle === "mix"
-        ? "Mix of both"
-        : undefined;
-
-    const rackLocationLabel =
-      rackLocation === "hall"
-        ? "Hall / office closet"
-        : rackLocation === "garage"
-        ? "Garage / utility room"
-        : rackLocation === "dedicated"
-        ? "Dedicated IDF / MDF"
-        : undefined;
-
-    const timelineLabel =
-      timeline === "flexible"
-        ? "Flexible"
-        : timeline === "month"
-        ? "Within a month"
-        : timeline === "rush"
-        ? "ASAP / rush"
-        : undefined;
-
-    const safeRoughLow =
-      typeof roughLow === "number" && !Number.isNaN(roughLow)
-        ? roughLow
-        : undefined;
-
-    const safeRoughHigh =
-      typeof roughHigh === "number" && !Number.isNaN(roughHigh)
-        ? roughHigh
-        : undefined;
+    if (project.cameras?.requested ?? estimate.focus.cameras) focusLabels.push("Cameras");
+    if (project.wifi?.requested ?? estimate.focus.wifi) focusLabels.push("Wi-Fi & APs");
+    if (project.accessControl?.requested ?? estimate.focus.accessControl) focusLabels.push("Access control");
 
     return {
-      projectType: projectType || "Home",
+      projectType: projectType || undefined,
       squareFootage,
       focus: focusLabels,
-      coverageProfile,
-      wifiLayout,
-      doorsAccess,
-      extras: extrasLabels,
-      wiringStyle: wiringStyleLabel,
-      rackLocation: rackLocationLabel,
-      timeline: timelineLabel,
-      roughLow: safeRoughLow,
-      roughHigh: safeRoughHigh,
-      notes: notes || undefined,
+      roughLow: typeof pricingLow === "number" && pricingLow > 0 ? pricingLow : estimate.roughLow || undefined,
+      roughHigh: typeof pricingHigh === "number" && pricingHigh > 0 ? pricingHigh : estimate.roughHigh || undefined,
+      notes: project.assessment?.scopeSummary || project.customerIntent?.summary || estimate.notes || undefined,
+
+      // Preserve the complete AI project object section-by-section. Booking,
+      // Sanity, magic links and quote resume all receive the same snapshot.
+      customerIntent: project.customerIntent,
+      property: project.property,
+      cameras: project.cameras,
+      network: project.network,
+      wifi: project.wifi,
+      accessControl: project.accessControl,
+      cabling: project.cabling,
+      installation: project.installation,
+      equipment: project.equipment,
+      pricing: project.pricing,
+      assessment: project.assessment,
     };
-  }, [estimate]);
+  }, [estimate, estimator.project]);
 
-  const handleConfirmBooking = async (payload: BookingPayload) => {
-    try {
-      const res = await fetch("/api/booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Booking request failed");
-      sessionStorage.removeItem("smartnet:resumed");
-    } catch (err) {
-      console.error("Failed to send booking", err);
-    }
-  };
+  const handleConfirmBooking = React.useCallback(async (_payload: BookingPayload) => {
+    // BookingCalendarSection already persists the booking. This callback is
+    // intentionally local-only so we do not POST the same booking twice.
+    sessionStorage.removeItem("smartnet:resumed");
+  }, []);
 
   return (
     <main className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
