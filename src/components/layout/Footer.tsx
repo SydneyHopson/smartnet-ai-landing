@@ -3,6 +3,8 @@ import Link from "next/link";
 
 const SMARTNET_PHONE = "(404) 966-5499";
 const SMARTNET_PHONE_HREF = "tel:+14049665499";
+const SMARTNET_EMAIL = "Info@smartnetinstallayion.ai";
+const FARHAD_EMAIL = "Farhad@smartnetinstallation.ai";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -37,7 +39,9 @@ export function Footer() {
             <p className="text-[.65rem] font-bold uppercase tracking-[.2em] text-sky-300">Contact SmartNET</p>
             <div className="mt-4 space-y-3 text-sm text-slate-400">
               <a href={SMARTNET_PHONE_HREF} className="block text-base font-bold text-white transition hover:text-sky-300">{SMARTNET_PHONE}</a>
-              <p className="text-xs leading-5 text-slate-500">Call SmartNET for estimates, walkthroughs, camera installations, Wi-Fi, networking, access control and structured cabling.</p>
+              <a href={`mailto:${SMARTNET_EMAIL}`} className="block transition hover:text-white">{SMARTNET_EMAIL}</a>
+              <a href={`mailto:${FARHAD_EMAIL}`} className="block transition hover:text-white">{FARHAD_EMAIL}</a>
+              <p className="text-xs leading-5 text-slate-500">Call or email SmartNET for estimates, walkthroughs, camera installations, Wi-Fi, networking, access control and structured cabling.</p>
               <p className="text-xs leading-5 text-slate-600">Final scope and pricing are confirmed after project verification and customer approval.</p>
             </div>
           </div>
