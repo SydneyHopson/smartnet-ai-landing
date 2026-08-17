@@ -15,6 +15,7 @@ export type OwnerBooking = {
   id: string;
   customerName: string;
   customerEmail?: string;
+  customerPhone?: string;
   bookingType: "initial" | "followup";
   scheduledForISO: string | null;
   status: BookingStatus;
@@ -25,7 +26,7 @@ export type OwnerBooking = {
 export type ReminderItem = {
   id: string;
   label: string;
-  when: string; // human-readable
+  when: string;
   bucket: "today" | "week" | "overdue";
   bookingId: string;
   kind: "walkthrough" | "followup";
@@ -41,7 +42,7 @@ export type LeadEvent = {
     | "booking_created"
     | "followup_scheduled"
     | "job_scheduled";
-  occurredAt: string; // ISO
+  occurredAt: string;
   bookingId?: string;
   leadId?: string;
 };
@@ -75,81 +76,37 @@ type WalkthroughBookingDoc = {
   followupWalkthroughTimeSlot?: string | null;
 };
 
-// ----- Data loader from Sanity -----
-
 async function getOwnerDashboardData(): Promise<OwnerDashboardData> {
   const query = `*[_type == "walkthroughBooking"] | order(dateISO desc)[0...100]{
-    _id,
-    status,
-    appointmentType,
-    dateISO,
-    timeSlot,
-    contactName,
-    contactEmail,
-    contactPhone,
-    estimateRoughRange,
-    estimateTotal,
-    rawEstimateJson,
-    createdAt,
-    followupWalkthroughDateISO,
-    followupWalkthroughTimeSlot
+    _id,status,appointmentType,dateISO,timeSlot,contactName,contactEmail,contactPhone,
+    estimateRoughRange,estimateTotal,rawEstimateJson,createdAt,
+    followupWalkthroughDateISO,followupWalkthroughTimeSlot
   }`;
-
   const docs = await sanityWriteClient.fetch<WalkthroughBookingDoc[]>(query);
-
   const bookings: OwnerBooking[] = docs.map((doc) => {
-    const {
-      _id,
-      contactName,
-      contactEmail,
-      appointmentType,
-      dateISO,
-      timeSlot,
-      status,
-      estimateRoughRange,
-      estimateTotal,
-    } = doc;
-
-    const typeRaw = (appointmentType || "").toLowerCase();
-    const bookingType: OwnerBooking["bookingType"] = typeRaw.includes("follow")
-      ? "followup"
-      : "initial";
-
-    const statusNormalized = normalizeStatus(status, bookingType);
-
-    const scheduledForISO =
-      dateISO && timeSlot ? buildDateTimeISO(dateISO, timeSlot) : dateISO || null;
-
-    const [roughLow, roughHigh] = parseEstimateRange(estimateRoughRange);
-
+    const typeRaw = (doc.appointmentType || "").toLowerCase();
+    const bookingType: OwnerBooking["bookingType"] = typeRaw.includes("follow") ? "followup" : "initial";
+    const scheduledForISO = doc.dateISO && doc.timeSlot ? buildDateTimeISO(doc.dateISO, doc.timeSlot) : doc.dateISO || null;
+    const [roughLow, roughHigh] = parseEstimateRange(doc.estimateRoughRange);
     return {
-      id: _id,
-      customerName: contactName || "Unknown customer",
-      customerEmail: contactEmail || undefined,
+      id: doc._id,
+      customerName: doc.contactName || "Unknown customer",
+      customerEmail: doc.contactEmail || undefined,
+      customerPhone: doc.contactPhone || undefined,
       bookingType,
       scheduledForISO,
-      status: statusNormalized,
-      roughLow: roughLow ?? estimateTotal ?? undefined,
+      status: normalizeStatus(doc.status, bookingType),
+      roughLow: roughLow ?? doc.estimateTotal ?? undefined,
       roughHigh: roughHigh ?? undefined,
     };
   });
-
   const reminders = buildReminderItems(docs);
   const leadEvents = buildLeadEvents(docs);
-  const kpis = buildKpis(bookings, reminders);
-
-  return { bookings, reminders, leadEvents, kpis };
+  return { bookings, reminders, leadEvents, kpis: buildKpis(bookings, reminders) };
 }
 
-// ----- Helpers (server side only) -----
-
-function normalizeStatus(
-  status: string | undefined,
-  bookingType: OwnerBooking["bookingType"]
-): BookingStatus {
-  if (!status) {
-    return bookingType === "followup" ? "followup" : "scheduled";
-  }
+function normalizeStatus(status: string | undefined, bookingType: OwnerBooking["bookingType"]): BookingStatus {
+  if (!status) return bookingType === "followup" ? "followup" : "scheduled";
   const s = status.toLowerCase();
   if (s.includes("new")) return "new";
   if (s.includes("sched")) return "scheduled";
@@ -157,187 +114,16 @@ function normalizeStatus(
   if (s.includes("complete") || s.includes("done")) return "completed";
   return "unknown";
 }
-
 function buildDateTimeISO(dateISO: string, timeSlot: string): string {
-  try {
-    const baseDate = new Date(dateISO);
-    const [time, ampmRaw] = timeSlot.split(" ");
-    if (!time || !ampmRaw) return dateISO;
-
-    const [hStr, mStr] = time.split(":");
-    let hours = parseInt(hStr || "0", 10);
-    const minutes = parseInt(mStr || "0", 10);
-    const ampm = ampmRaw.toUpperCase();
-
-    if (ampm === "PM" && hours < 12) hours += 12;
-    if (ampm === "AM" && hours === 12) hours = 0;
-
-    baseDate.setHours(hours, minutes, 0, 0);
-    return baseDate.toISOString();
-  } catch {
-    return dateISO;
-  }
+  try { const d=new Date(dateISO); const [time,ampmRaw]=timeSlot.split(" "); if(!time||!ampmRaw)return dateISO; const [h,m]=time.split(":"); let hours=parseInt(h||"0",10); const minutes=parseInt(m||"0",10); const ampm=ampmRaw.toUpperCase(); if(ampm==="PM"&&hours<12)hours+=12; if(ampm==="AM"&&hours===12)hours=0; d.setHours(hours,minutes,0,0); return d.toISOString(); } catch { return dateISO; }
 }
-
-function parseEstimateRange(
-  range: string | null | undefined
-): [number | null, number | null] {
-  if (!range) return [null, null];
-  const parts = range.split("–").map((p) => p.trim());
-  if (parts.length !== 2) return [null, null];
-
-  const parseMoney = (s: string): number | null => {
-    const cleaned = s.replace(/[^0-9.]/g, "");
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  const low = parseMoney(parts[0]);
-  const high = parseMoney(parts[1]);
-  return [low, high];
-}
-
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function classifyBucket(
-  date: Date,
-  todayStart: Date,
-  weekAhead: Date
-): "today" | "week" | "overdue" | null {
-  const day = startOfDay(date).getTime();
-  const today = todayStart.getTime();
-  const weekEnd = weekAhead.getTime();
-
-  if (day === today) return "today";
-  if (day > today && day <= weekEnd) return "week";
-  if (day < today) return "overdue";
-  return null;
-}
-
-function friendlyWhen(date: Date, timeSlot?: string | null): string {
-  const dateStr = date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-  if (timeSlot) return `${dateStr} • ${timeSlot}`;
-  return dateStr;
-}
-
-function buildReminderItems(docs: WalkthroughBookingDoc[]): ReminderItem[] {
-  const now = new Date();
-  const todayStart = startOfDay(now);
-  const weekAhead = new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  const items: ReminderItem[] = [];
-
-  for (const doc of docs) {
-    const baseName = doc.contactName || "Unknown customer";
-
-    if (doc.dateISO) {
-      const d = new Date(doc.dateISO);
-      const bucket = classifyBucket(d, todayStart, weekAhead);
-      if (bucket) {
-        items.push({
-          id: doc._id + "-walkthrough",
-          label: `Walkthrough – ${baseName}`,
-          when: friendlyWhen(d, doc.timeSlot),
-          bucket,
-          bookingId: doc._id,
-          kind: "walkthrough",
-        });
-      }
-    }
-
-    if (doc.followupWalkthroughDateISO) {
-      const d = new Date(doc.followupWalkthroughDateISO);
-      const bucket = classifyBucket(d, todayStart, weekAhead);
-      if (bucket) {
-        items.push({
-          id: doc._id + "-followup",
-          label: `Follow-up – ${baseName}`,
-          when: friendlyWhen(d, doc.followupWalkthroughTimeSlot),
-          bucket,
-          bookingId: doc._id,
-          kind: "followup",
-        });
-      }
-    }
-  }
-
-  return items;
-}
-
-function buildLeadEvents(docs: WalkthroughBookingDoc[]): LeadEvent[] {
-  const events: LeadEvent[] = [];
-
-  for (const doc of docs) {
-    const name = doc.contactName || "Unknown customer";
-
-    if (doc.createdAt) {
-      events.push({
-        id: doc._id + "-created",
-        customerName: name,
-        eventType: "booking_created",
-        occurredAt: doc.createdAt,
-        bookingId: doc._id,
-      });
-    } else if (doc.dateISO) {
-      events.push({
-        id: doc._id + "-created",
-        customerName: name,
-        eventType: "booking_created",
-        occurredAt: doc.dateISO,
-        bookingId: doc._id,
-      });
-    }
-
-    if (doc.followupWalkthroughDateISO) {
-      events.push({
-        id: doc._id + "-followup",
-        customerName: name,
-        eventType: "followup_scheduled",
-        occurredAt: doc.followupWalkthroughDateISO,
-        bookingId: doc._id,
-      });
-    }
-  }
-
-  return events;
-}
-
-function buildKpis(
-  bookings: OwnerBooking[],
-  reminders: ReminderItem[]
-): OwnerDashboardData["kpis"] {
-  const completedJobs = bookings.filter((b) => b.status === "completed").length;
-
-  const upcomingWalkthroughs = bookings.filter(
-    (b) =>
-      (b.status === "scheduled" || b.status === "new") &&
-      b.scheduledForISO &&
-      new Date(b.scheduledForISO) >= new Date()
-  ).length;
-
-  const openFollowups = reminders.filter((r) => r.kind === "followup").length;
-
-  const activeLeadEmails = new Set(
-    bookings
-      .filter((b) => b.status !== "completed")
-      .map((b) => b.customerEmail)
-      .filter(Boolean) as string[]
-  );
-
-  return {
-    activeLeads: activeLeadEmails.size || bookings.length,
-    upcomingWalkthroughs,
-    openFollowups,
-    completedJobs,
-  };
-}
-
-// ----- Page (server) -----
+function parseEstimateRange(range?: string | null): [number|null,number|null] { if(!range)return[null,null]; const parts=range.split("–").map(p=>p.trim()); if(parts.length!==2)return[null,null]; const p=(s:string)=>{const n=Number(s.replace(/[^0-9.]/g,""));return Number.isFinite(n)?n:null}; return[p(parts[0]),p(parts[1])]; }
+function startOfDay(d:Date){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function classifyBucket(date:Date,todayStart:Date,weekAhead:Date):"today"|"week"|"overdue"|null{const day=startOfDay(date).getTime(),today=todayStart.getTime(),week=weekAhead.getTime();if(day===today)return"today";if(day>today&&day<=week)return"week";if(day<today)return"overdue";return null;}
+function friendlyWhen(date:Date,timeSlot?:string|null){const s=date.toLocaleDateString("en-US",{month:"short",day:"numeric"});return timeSlot?`${s} • ${timeSlot}`:s;}
+function buildReminderItems(docs:WalkthroughBookingDoc[]):ReminderItem[]{const today=startOfDay(new Date()),week=new Date(today.getTime()+7*86400000),items:ReminderItem[]=[];for(const d of docs){const name=d.contactName||"Unknown customer";if(d.dateISO){const date=new Date(d.dateISO),bucket=classifyBucket(date,today,week);if(bucket)items.push({id:d._id+"-walkthrough",label:`Walkthrough – ${name}`,when:friendlyWhen(date,d.timeSlot),bucket,bookingId:d._id,kind:"walkthrough"});}if(d.followupWalkthroughDateISO){const date=new Date(d.followupWalkthroughDateISO),bucket=classifyBucket(date,today,week);if(bucket)items.push({id:d._id+"-followup",label:`Follow-up – ${name}`,when:friendlyWhen(date,d.followupWalkthroughTimeSlot),bucket,bookingId:d._id,kind:"followup"});}}return items;}
+function buildLeadEvents(docs:WalkthroughBookingDoc[]):LeadEvent[]{const events:LeadEvent[]=[];for(const d of docs){const name=d.contactName||"Unknown customer";if(d.createdAt||d.dateISO)events.push({id:d._id+"-created",customerName:name,eventType:"booking_created",occurredAt:d.createdAt||d.dateISO!,bookingId:d._id});if(d.followupWalkthroughDateISO)events.push({id:d._id+"-followup",customerName:name,eventType:"followup_scheduled",occurredAt:d.followupWalkthroughDateISO,bookingId:d._id});}return events;}
+function buildKpis(bookings:OwnerBooking[],reminders:ReminderItem[]):OwnerDashboardData["kpis"]{const completedJobs=bookings.filter(b=>b.status==="completed").length;const upcomingWalkthroughs=bookings.filter(b=>(b.status==="scheduled"||b.status==="new")&&b.scheduledForISO&&new Date(b.scheduledForISO)>=new Date()).length;const openFollowups=reminders.filter(r=>r.kind==="followup").length;const active=new Set(bookings.filter(b=>b.status!=="completed").map(b=>b.customerEmail||b.customerPhone||b.id));return{activeLeads:active.size,upcomingWalkthroughs,openFollowups,completedJobs};}
 
 export default async function OwnerDashboardPage(): Promise<ReactElement> {
   const data = await getOwnerDashboardData();
