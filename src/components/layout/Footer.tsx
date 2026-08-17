@@ -3,8 +3,8 @@ import Link from "next/link";
 
 const SMARTNET_PHONE = "(404) 966-5499";
 const SMARTNET_PHONE_HREF = "tel:+14049665499";
-const SMARTNET_EMAIL = "Info@smartnetinstallayion.ai";
-const FARHAD_EMAIL = "Farhad@smartnetinstallation.ai";
+const SMARTNET_EMAIL = "info@smartnetinstallation.ai";
+const FARHAD_EMAIL = "farhad@smartnetinstallation.ai";
 const REIGN_MOBILE_PHONE = "(470) 226-7705";
 const REIGN_MOBILE_PHONE_HREF = "tel:+14702267705";
 
