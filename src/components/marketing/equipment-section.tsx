@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { BatteryCharging, Cable, Camera, HardDrive, Server, Wifi } from "lucide-react";
 
 const equipment = [
-  { icon: Camera, label: "Cameras", title: "Coverage built around the view", body: "Indoor, outdoor and specialty cameras selected around distance, lighting, weather and the detail you need to capture.", image: "/trustbar/smartnet-badge.png" },
-  { icon: Wifi, label: "Network", title: "Wi-Fi and switching that stay stable", body: "Access points, PoE and hard-wired links designed around coverage and device load—not just where an outlet happens to be.", image: "/hero/images/smartnet-ai-building-v3.png" },
-  { icon: HardDrive, label: "Recording", title: "Storage sized for the project", body: "NVR and retention planning matched to camera count, recording goals and future growth.", image: "/trustbar/smartnet-badge34.png" },
-  { icon: BatteryCharging, label: "Power", title: "Uptime where it matters", body: "PoE budgets, injectors and UPS options planned to keep the backbone dependable through normal power events.", image: "/mascot/images/mascot1.png" },
-  { icon: Server, label: "Racks", title: "Clean equipment spaces", body: "Wall racks, floor racks, patch panels and cable management sized to the site with room left for tomorrow.", image: "/trustbar/smartnet-badge21.png" },
-  { icon: Cable, label: "Cabling", title: "The infrastructure you barely notice", body: "Correct cable, clean pathways, tested terminations and labeling from device to rack.", image: "/logos/images/SmartNet3.png" },
+  { icon: Camera, label: "Cameras", title: "Coverage built around the view", body: "Indoor, outdoor and specialty cameras selected around distance, lighting, weather and the detail you need to capture.", image: "/styling/images/warehouse-dock-cameras.png" },
+  { icon: Wifi, label: "Network", title: "Wi-Fi and switching that stay stable", body: "Access points, PoE and hard-wired links designed around coverage and device load—not just where an outlet happens to be.", image: "/styling/images/wifi-access-points.png" },
+  { icon: HardDrive, label: "Recording", title: "Storage sized for the project", body: "NVR and retention planning matched to camera count, recording goals and future growth.", image: "/styling/images/datacenter-infrastructure.png" },
+  { icon: BatteryCharging, label: "Power", title: "Uptime where it matters", body: "PoE budgets, injectors and UPS options planned to keep the backbone dependable through normal power events.", image: "/styling/images/commercial-smartnet-solutions.png" },
+  { icon: Server, label: "Racks", title: "Clean equipment spaces", body: "Wall racks, floor racks, patch panels and cable management sized to the site with room left for tomorrow.", image: "/styling/images/structured-cabling-network-rack.png" },
+  { icon: Cable, label: "Cabling", title: "The infrastructure you barely notice", body: "Correct cable, clean pathways, tested terminations and labeling from device to rack.", image: "/styling/images/office-network-infrastructure.png" },
 ];
 
 export function EquipmentSection() {
@@ -28,11 +28,11 @@ export function EquipmentSection() {
             const Icon = item.icon;
             return (
               <motion.article key={item.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .04 }} whileHover={{ y: -6 }} className="group relative min-h-[310px] overflow-hidden rounded-2xl border border-sky-400/15 bg-[#061020]">
-                <Image src={item.image} alt="" fill sizes="(max-width:768px) 100vw, 33vw" className={`object-cover opacity-25 transition duration-700 group-hover:scale-110 group-hover:opacity-40 ${index === 1 ? "object-[70%_40%]" : "object-center"}`} />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#061020]/25 via-[#061020]/65 to-[#020617]" />
+                <Image src={item.image} alt="" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover object-center opacity-42 saturate-90 transition duration-700 group-hover:scale-110 group-hover:opacity-58 group-hover:saturate-100" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#061020]/18 via-[#061020]/58 to-[#020617]" />
                 <div className="absolute inset-0 opacity-[.04] [background-image:linear-gradient(rgba(56,189,248,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,.8)_1px,transparent_1px)] [background-size:22px_22px]" />
                 <div className="relative flex h-full min-h-[310px] flex-col p-6">
-                  <div className="flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-300/30 bg-sky-400/10 text-sky-200 backdrop-blur"><Icon className="h-5 w-5" /></span><span className="font-mono text-[.6rem] tracking-[.18em] text-sky-200/50">SYS-0{index + 1}</span></div>
+                  <div className="flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-300/30 bg-[#031126]/80 text-sky-200 backdrop-blur"><Icon className="h-5 w-5" /></span><span className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-[.6rem] tracking-[.18em] text-sky-200/70 backdrop-blur">SYS-0{index + 1}</span></div>
                   <div className="mt-auto"><p className="text-[.65rem] font-bold uppercase tracking-[.2em] text-sky-300">{item.label}</p><h3 className="mt-2 text-xl font-bold text-white">{item.title}</h3><p className="mt-3 text-sm leading-6 text-slate-300">{item.body}</p></div>
                 </div>
                 <div className="absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r from-sky-300 to-blue-600 transition-all duration-500 group-hover:w-full" />
