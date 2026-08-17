@@ -42,10 +42,7 @@ export async function POST(req: NextRequest) {
     const estimate = body.estimate ?? null;
 
     if (!email && !phone) {
-      return NextResponse.json(
-        { error: "Email or phone is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email or phone is required" }, { status: 400 });
     }
 
     const token = randomUUID();
@@ -60,18 +57,12 @@ export async function POST(req: NextRequest) {
     let leadId: string | null = null;
 
     if (email) {
-      const existingByEmail = await sanityWriteClient.fetch<{ _id: string } | null>(
-        `*[_type == "smartnetLead" && lower(email) == $email][0]{ _id }`,
-        { email }
-      );
+      const existingByEmail = await sanityWriteClient.fetch<{ _id: string } | null>(`*[_type == "smartnetLead" && lower(email) == $email][0]{ _id }`, { email });
       leadId = existingByEmail?._id ?? null;
     }
 
     if (!leadId && phone) {
-      const existingByPhone = await sanityWriteClient.fetch<{ _id: string } | null>(
-        `*[_type == "smartnetLead" && phone == $phone][0]{ _id }`,
-        { phone }
-      );
+      const existingByPhone = await sanityWriteClient.fetch<{ _id: string } | null>(`*[_type == "smartnetLead" && phone == $phone][0]{ _id }`, { phone });
       leadId = existingByPhone?._id ?? null;
     }
 
@@ -79,8 +70,6 @@ export async function POST(req: NextRequest) {
       const createdLead = await sanityWriteClient.create({
         _type: "smartnetLead",
         fullName: fullName ?? (email ? email.split("@")[0] : "SmartNET Lead"),
-        // Existing lead schema currently expects email. Preserve phone-only
-        // direct booking while the schema is migrated to optional email.
         email: email ?? `phone-${phone?.replace(/\D/g, "") || token}@smartnet.local`,
         phone: phone ?? undefined,
         primaryJobLocation: jobLocation ?? undefined,
@@ -104,11 +93,7 @@ export async function POST(req: NextRequest) {
       if (phone) leadUpdate.phone = phone;
       if (jobLocation) leadUpdate.primaryJobLocation = jobLocation;
       if (fullName) leadUpdate.fullName = fullName;
-
-      await sanityWriteClient
-        .patch(leadId)
-        .set(leadUpdate)
-        .commit({ autoGenerateArrayKeys: true });
+      await sanityWriteClient.patch(leadId).set(leadUpdate).commit({ autoGenerateArrayKeys: true });
     }
 
     const sessionDoc = await sanityWriteClient.create({
@@ -122,8 +107,6 @@ export async function POST(req: NextRequest) {
       status: "active",
       estimateTotal: estimateTotal ?? undefined,
       estimateSummary,
-      // Keep both forms. rawEstimateJson is the lossless source of truth when
-      // ProjectEstimate gains fields before the Studio schema catches up.
       estimateSnapshot: estimate ?? undefined,
       rawEstimateJson: estimate ? JSON.stringify(estimate) : undefined,
       expiresAt: expires.toISOString(),
@@ -132,52 +115,40 @@ export async function POST(req: NextRequest) {
     });
 
     if (leadId) {
-      await sanityWriteClient
-        .patch(leadId)
-        .setIfMissing({ magicLinkSessions: [] })
-        .append("magicLinkSessions", [
-          { _type: "reference", _ref: sessionDoc._id },
-        ])
-        .commit({ autoGenerateArrayKeys: true });
+      await sanityWriteClient.patch(leadId).setIfMissing({ magicLinkSessions: [] }).append("magicLinkSessions", [{ _type: "reference", _ref: sessionDoc._id }]).commit({ autoGenerateArrayKeys: true });
     }
+
+    let emailSent = false;
+    let emailId: string | null = null;
+    let emailError: string | null = null;
 
     if (email) {
       try {
-        await resend.emails.send({
+        const result = await resend.emails.send({
           from: process.env.EMAIL_FROM || "SmartNET <onboarding@resend.dev>",
           to: email,
           subject: "Your SmartNET Project Link",
-          html: `
-            <div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;">
-              <h2>Your SmartNET project is saved</h2>
-              <p>Hi${fullName ? ` ${fullName}` : ""},</p>
-              <p>Your project profile${estimate ? ", estimate, equipment scope and installation details" : ""} are saved together.</p>
-              <p><a href="${quoteUrl}" style="color:#0284c7;font-weight:700;">Open your SmartNET project</a></p>
-              <p style="font-size:13px;color:#64748b;">${estimateSummary}</p>
-              <p style="font-size:12px;color:#94a3b8;word-break:break-all;">${quoteUrl}</p>
-            </div>
-          `,
+          html: `<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;"><h2>Your SmartNET project is saved</h2><p>Hi${fullName ? ` ${fullName}` : ""},</p><p>Your project profile${estimate ? ", estimate, equipment scope and installation details" : ""} are saved together.</p><p><a href="${quoteUrl}" style="color:#0284c7;font-weight:700;">Open your SmartNET project</a></p><p style="font-size:13px;color:#64748b;">${estimateSummary}</p><p style="font-size:12px;color:#94a3b8;word-break:break-all;">${quoteUrl}</p></div>`,
         });
+        emailId = result.data?.id ?? null;
+        emailSent = Boolean(emailId) && !result.error;
+        if (result.error) emailError = result.error.message;
       } catch (emailErr) {
+        emailError = emailErr instanceof Error ? emailErr.message : "Magic-link email failed";
         console.error("[SmartNET magic link email error]", emailErr);
       }
     }
 
-    return NextResponse.json(
-      {
-        ok: true,
-        quoteUrl,
-        token,
-        leadId,
-        sessionId: sessionDoc._id,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      ok: true,
+      quoteUrl,
+      token,
+      leadId,
+      sessionId: sessionDoc._id,
+      email: { attempted: Boolean(email), sent: emailSent, id: emailId, error: emailError },
+    }, { status: 200 });
   } catch (err) {
     console.error("[SmartNET magic link error]", err);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
