@@ -78,21 +78,18 @@ function HomeShell() {
 
   const calendarEstimate: CalendarEstimate | undefined = React.useMemo(() => {
     const project = estimator.project;
-
     if (!project) return restoredEstimate;
 
     const projectType = project.property?.projectType ?? estimate.projectType;
     const squareFootage = (project.property?.squareFootage?.value ?? estimate.squareFootage) || undefined;
     const pricingLow = project.pricing?.estimatedLow;
     const pricingHigh = project.pricing?.estimatedHigh;
-
     const interiorCameras = quantityValue(project.cameras?.interiorCount) ?? 0;
     const exteriorCameras = quantityValue(project.cameras?.exteriorCount) ?? 0;
     const specialtyCameras = quantityValue(project.cameras?.specialtyCount) ?? 0;
     const cameraCount = interiorCameras + exteriorCameras + specialtyCameras;
     const apCount = quantityValue(project.wifi?.estimatedAccessPointCount);
     const doorCount = quantityValue(project.accessControl?.controlledDoorCount);
-
     const focusLabels: string[] = [];
     if (project.cameras?.requested ?? estimate.focus.cameras) focusLabels.push("Cameras");
     if (project.wifi?.requested ?? estimate.focus.wifi) focusLabels.push("Wi-Fi & APs");
@@ -123,6 +120,8 @@ function HomeShell() {
     sessionStorage.removeItem("smartnet:resumed");
   }, []);
 
+  const anchorClass = "scroll-mt-20";
+
   return (
     <main id="top" className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
       <ResumeLoader onRestore={handleRestore} />
@@ -130,22 +129,24 @@ function HomeShell() {
 
       <HeroSection />
       <TrustBar />
-      <SmartNetGeneratorSection startOnSummary={hasResumeToken} />
+      <div id="smartnet-generator" className={anchorClass}>
+        <SmartNetGeneratorSection startOnSummary={hasResumeToken} />
+      </div>
 
       <WalkthroughWarmupSection />
       <section id="booking-calendar" className="scroll-mt-20 border-t border-sky-500/10 bg-[#020617]">
         <BookingCalendarSection estimate={calendarEstimate} onConfirmBooking={handleConfirmBooking} />
       </section>
 
-      <HowItWorksSection />
+      <div id="how-it-works" className={anchorClass}><HowItWorksSection /></div>
       <WhySmartNetSection />
-      <ProjectTypesSection />
-      <FieldResultsSection />
+      <div id="project-types" className={anchorClass}><ProjectTypesSection /></div>
+      <div id="field-results" className={anchorClass}><FieldResultsSection /></div>
       <EquipmentSection />
       <TestimonialsSection />
-      <PricingPreviewSection />
+      <div id="pricing" className={anchorClass}><PricingPreviewSection /></div>
       <ServiceAreaSection />
-      <FaqSection />
+      <div id="faq" className={anchorClass}><FaqSection /></div>
 
       <Footer />
     </main>
