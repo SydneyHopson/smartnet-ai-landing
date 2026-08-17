@@ -1,24 +1,7 @@
-// File: src/app/api/magic-link/[token]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
-import { sanityClient } from "@/lib/sanityClient"; // read client
-import { sanityWriteClient } from "@/lib/sanityWriteClient"; // ✅ write client
-
-type SmartNetEstimate = {
-  projectType?: string;
-  squareFootage?: number;
-  focus?: string[];
-  coverageProfile?: string;
-  wifiLayout?: string;
-  doorsAccess?: string;
-  extras?: string[];
-  wiringStyle?: string;
-  rackLocation?: string;
-  timeline?: string;
-  roughLow?: number;
-  roughHigh?: number;
-  notes?: string;
-};
+import { sanityClient } from "@/lib/sanityClient";
+import { sanityWriteClient } from "@/lib/sanityWriteClient";
+import type { SmartNetEstimateSnapshot } from "@/lib/estimate-snapshot";
 
 type MagicLinkSessionDoc = {
   _id: string;
@@ -27,20 +10,13 @@ type MagicLinkSessionDoc = {
   jobLocation?: string | null;
   token: string;
   status?: "active" | "redeemed" | "expired" | string;
-
   lead?: { _ref: string } | null;
-
   estimateTotal?: number | null;
   estimateSummary?: string | null;
-
-  // ✅ new fields
-  estimateSnapshot?: SmartNetEstimate | null;
+  estimateSnapshot?: SmartNetEstimateSnapshot | null;
   restored?: boolean | null;
   restoredAt?: string | null;
-
-  // legacy backup
   rawEstimateJson?: string | null;
-
   expiresAt?: string | null;
   createdAt?: string | null;
   lastAccessedAt?: string | null;
@@ -51,7 +27,6 @@ export async function GET(
   context: { params: Promise<{ token: string }> }
 ) {
   try {
-    // 🔑 In Next.js App Router, params can be a Promise
     const { token } = await context.params;
 
     if (!token) {
@@ -77,8 +52,6 @@ export async function GET(
       restoredAt
     }`;
 
-    // ✅ BEST FIX: Sanity fetch typings can infer params as never/undefined.
-    // Cast params to a generic param bag to satisfy TS in strict builds.
     const doc = await sanityClient.fetch<MagicLinkSessionDoc | null>(
       query,
       { token } as Record<string, unknown>
@@ -88,50 +61,41 @@ export async function GET(
       return NextResponse.json({ error: "Magic link not found" }, { status: 404 });
     }
 
-    // 🕒 Check expiry
     const now = new Date();
-    let isExpired = false;
+    const isExpired = Boolean(
+      doc.expiresAt && new Date(doc.expiresAt).getTime() < now.getTime()
+    );
 
-    if (doc.expiresAt) {
-      const expiry = new Date(doc.expiresAt);
-      if (expiry.getTime() < now.getTime()) {
-        isExpired = true;
-      }
-    }
-
-    // 🧠 Prefer structured snapshot; fallback to JSON parse
-    let estimate: SmartNetEstimate | null = null;
-
-    if (doc.estimateSnapshot) {
-      estimate = doc.estimateSnapshot;
-    } else if (doc.rawEstimateJson) {
+    // rawEstimateJson is the lossless source of truth because the Sanity
+    // estimateSnapshot Studio schema may lag new ProjectEstimate fields.
+    let estimate: SmartNetEstimateSnapshot | null = null;
+    if (doc.rawEstimateJson) {
       try {
-        estimate = JSON.parse(doc.rawEstimateJson) as SmartNetEstimate;
-      } catch (e) {
-        console.warn("[SmartNET] Failed to parse rawEstimateJson", e);
+        estimate = JSON.parse(doc.rawEstimateJson) as SmartNetEstimateSnapshot;
+      } catch (error) {
+        console.error("[SmartNET] Failed to restore full magic-link estimate JSON", error);
       }
     }
+    if (!estimate && doc.estimateSnapshot) {
+      estimate = doc.estimateSnapshot;
+    }
 
-    // ✅ Decide what status to write back
-    const statusToWrite = isExpired ? "expired" : "redeemed";
-
-    // ✅ Update access tracking + restore signals
-    const patchSession = sanityWriteClient.patch(doc._id).set({
-      lastAccessedAt: now.toISOString(),
-      restored: true,
-      restoredAt: doc.restoredAt ?? now.toISOString(),
-      status: statusToWrite,
-    });
+    const leadId = doc.lead?._ref ?? null;
 
     try {
-      await patchSession.commit({ autoGenerateArrayKeys: true });
-    } catch (patchErr) {
-      console.error("[SmartNET] Failed updating magicLinkSession tracking", patchErr);
-      // Don’t fail the request—reading should still work.
+      await sanityWriteClient
+        .patch(doc._id)
+        .set({
+          lastAccessedAt: now.toISOString(),
+          restored: true,
+          restoredAt: doc.restoredAt ?? now.toISOString(),
+          status: isExpired ? "expired" : "redeemed",
+        })
+        .commit({ autoGenerateArrayKeys: true });
+    } catch (error) {
+      console.error("[SmartNET] Failed updating magic-link access tracking", error);
     }
 
-    // ✅ Update lead lastInteractionAt if session has lead reference
-    const leadId = doc.lead?._ref ?? null;
     if (leadId) {
       try {
         await sanityWriteClient
@@ -142,8 +106,8 @@ export async function GET(
             status: "engaged",
           })
           .commit({ autoGenerateArrayKeys: true });
-      } catch (leadPatchErr) {
-        console.error("[SmartNET] Failed updating lead lastInteractionAt", leadPatchErr);
+      } catch (error) {
+        console.error("[SmartNET] Failed updating magic-link lead", error);
       }
     }
 
@@ -157,7 +121,7 @@ export async function GET(
           phone: doc.phone ?? null,
           jobLocation: doc.jobLocation ?? null,
           token: doc.token,
-          status: isExpired ? "expired" : (doc.status ?? null),
+          status: isExpired ? "expired" : "redeemed",
           leadId,
           estimateTotal: doc.estimateTotal ?? null,
           estimateSummary: doc.estimateSummary ?? null,
