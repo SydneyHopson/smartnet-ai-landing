@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Phone, Sparkles, X } from "lucide-react";
+import Image from "next/image";
+import { Menu, Phone, X } from "lucide-react";
 
 const navItems = [
   { label: "AI Estimate", href: "#smartnet-generator" },
@@ -32,13 +33,16 @@ export function SiteNavigation() {
   return (
     <header className="sticky top-0 z-[80] border-b border-sky-400/10 bg-[#020617]/88 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <button onClick={() => goTo("#top")} className="group flex shrink-0 items-center gap-2 text-left" aria-label="SmartNET home">
-          <span className="grid h-9 w-9 place-items-center rounded-xl border border-sky-400/25 bg-sky-400/10 shadow-[0_0_28px_rgba(56,189,248,.12)]">
-            <Sparkles className="h-4 w-4 text-sky-300" />
-          </span>
-          <span>
-            <span className="block text-sm font-black tracking-[0.14em] text-white">SMARTNET</span>
-            <span className="hidden text-[9px] font-semibold uppercase tracking-[0.22em] text-sky-300/70 sm:block">Installation LLC</span>
+        <button onClick={() => goTo("#top")} className="group flex shrink-0 items-center text-left" aria-label="SmartNET home">
+          <span className="relative block h-12 w-[150px] sm:w-[178px]">
+            <span className="pointer-events-none absolute inset-2 rounded-full bg-sky-400/10 blur-xl transition group-hover:bg-sky-400/20" />
+            <Image
+              src="/logos/images/smartnet-installation-logo-2026.png"
+              alt="SmartNET Installation LLC"
+              fill
+              sizes="178px"
+              className="relative object-contain object-left drop-shadow-[0_0_12px_rgba(56,189,248,.28)]"
+            />
           </span>
         </button>
 
