@@ -21,7 +21,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/owner/dashboard" },
   { label: "Calendar", icon: CalendarDays, href: "/owner/dashboard/calendar" },
   { label: "Leads", icon: UserRoundSearch, href: "#leads" },
-  { label: "Walkthroughs", icon: ShieldCheck }, { label: "Jobs", icon: BriefcaseBusiness },
+  { label: "Walkthroughs", icon: ShieldCheck, href: "/owner/walkthroughs" }, { label: "Jobs", icon: BriefcaseBusiness },
   { label: "Quotes", icon: FileText }, { label: "Customers", icon: Users }, { label: "Reports", icon: BarChart3 },
 ];
 const statusAccent: Record<BookingStatus,string> = { new:"border-blue-400/30 bg-blue-500/10 text-blue-300", scheduled:"border-cyan-400/30 bg-cyan-500/10 text-cyan-300", followup:"border-violet-400/30 bg-violet-500/10 text-violet-300", completed:"border-emerald-400/30 bg-emerald-500/10 text-emerald-300", unknown:"border-slate-600 bg-slate-800 text-slate-300" };
