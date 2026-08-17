@@ -156,7 +156,12 @@ function EstimatePanel() {
         <>
           <p className="mt-3 text-2xl font-semibold tracking-tight text-white">${pricing.estimatedLow.toLocaleString()} – ${pricing.estimatedHigh.toLocaleString()}</p>
           <p className="mt-2 text-xs leading-relaxed text-slate-400">Final price is confirmed after walkthrough verification.</p>
+          <p className="mt-2 text-[0.68rem] font-medium leading-relaxed text-blue-200">This is a complete project price range, not simply materials + field labor.</p>
           <div className="mt-4 grid grid-cols-2 gap-2"><CostCard label="Materials" value={pricing.materialCost} /><CostCard label="Labor" value={pricing.laborCost} /></div>
+          <div className="mt-3 rounded-xl border border-blue-500/15 bg-blue-500/5 px-3 py-3">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-blue-300">How this estimate is calculated</p>
+            <p className="mt-1.5 text-[0.68rem] leading-relaxed text-slate-400">Materials and installation labor are the foundation of your project cost. The preliminary range also accounts for project mobilization, installation consumables, business overhead, configuration and commissioning, and site-condition uncertainty. Because SmartNET has not yet completed an on-site walkthrough, the range includes an allowance for conditions that can only be verified in person.</p>
+          </div>
           {bomItems.length > 0 && <EstimateBreakdown items={bomItems} materialTotal={pricing.materialCost} />}
         </>
       ) : <p className="mt-3 text-sm leading-relaxed text-slate-400">{readyForPricing ? "SmartNET has enough information to calculate the preliminary estimate." : "Pricing will appear when discovery is complete."}</p>}
