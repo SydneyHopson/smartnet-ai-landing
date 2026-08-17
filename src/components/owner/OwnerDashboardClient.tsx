@@ -33,9 +33,7 @@ import { OwnerLogoutButton } from "../../app/owner/access/OwnerLogoutButton";
 import type {
   BookingStatus,
   LeadEvent,
-  OwnerBooking,
   OwnerDashboardData,
-  ReminderItem,
 } from "@/app/owner/dashboard/page";
 
 type Props = OwnerDashboardData;
