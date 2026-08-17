@@ -17,19 +17,35 @@ export function EquipmentSection() {
   return (
     <section className="relative overflow-hidden border-y border-sky-500/10 bg-[#020617] py-20 sm:py-24">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_78%_42%,rgba(14,165,233,.10),transparent_30%),radial-gradient(ellipse_at_18%_72%,rgba(37,99,235,.10),transparent_30%)]" />
+
+      {/* Full-width SmartNET system composition sits behind the equipment grid. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-[-3%] top-[24%] hidden lg:block">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_34%_50%,rgba(14,165,233,.13),transparent_34%),radial-gradient(ellipse_at_68%_54%,rgba(37,99,235,.10),transparent_38%)]" />
+        <Image
+          src="/styling/images/smartnet-system-stack.png"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-contain object-left-bottom opacity-82 saturate-110 drop-shadow-[0_0_48px_rgba(14,165,233,.18)]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#020617]/10 to-[#020617]/30" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#020617] via-[#020617]/45 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#020617]/65 to-transparent" />
+      </div>
+
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-end">
           <div><p className="text-xs font-bold uppercase tracking-[.28em] text-sky-300">Equipment & infrastructure</p><h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Hardware chosen for the system—not the shelf.</h2></div>
           <p className="max-w-2xl text-base leading-7 text-slate-400 lg:justify-self-end">We design the coverage and backbone first, then select the equipment tier that fits the environment, budget and growth plan.</p>
         </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="relative mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {equipment.map((item, index) => {
             const Icon = item.icon;
             return (
-              <motion.article key={item.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .04 }} whileHover={{ y: -6 }} className="group relative min-h-[310px] overflow-hidden rounded-2xl border border-sky-400/15 bg-[#061020]">
-                <Image src={item.image} alt="" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover object-center opacity-42 saturate-90 transition duration-700 group-hover:scale-110 group-hover:opacity-58 group-hover:saturate-100" />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#061020]/18 via-[#061020]/58 to-[#020617]" />
+              <motion.article key={item.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .04 }} whileHover={{ y: -6 }} className="group relative min-h-[310px] overflow-hidden rounded-2xl border border-sky-400/20 bg-[#061020]/78 shadow-[0_18px_55px_rgba(2,6,23,.32)] backdrop-blur-[3px]">
+                <Image src={item.image} alt="" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover object-center opacity-32 saturate-90 transition duration-700 group-hover:scale-110 group-hover:opacity-48 group-hover:saturate-100" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#061020]/20 via-[#061020]/64 to-[#020617]/94" />
                 <div className="absolute inset-0 opacity-[.04] [background-image:linear-gradient(rgba(56,189,248,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,.8)_1px,transparent_1px)] [background-size:22px_22px]" />
                 <div className="relative flex h-full min-h-[310px] flex-col p-6">
                   <div className="flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-300/30 bg-[#031126]/80 text-sky-200 backdrop-blur"><Icon className="h-5 w-5" /></span><span className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-[.6rem] tracking-[.18em] text-sky-200/70 backdrop-blur">SYS-0{index + 1}</span></div>
