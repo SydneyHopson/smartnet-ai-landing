@@ -14,10 +14,10 @@ const steps = [
 export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="relative overflow-hidden border-y border-sky-400/10 bg-[#030817] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
-      <div className="pointer-events-none absolute right-[-8%] top-[-10%] h-[620px] w-[720px] opacity-20">
-        <Image src="/hero/images/smartnet-ai-building-v3.png" alt="" fill sizes="720px" className="object-contain object-right-top" />
+      <div className="pointer-events-none absolute right-[-6%] top-[-6%] h-[680px] w-[760px] opacity-30">
+        <Image src="/styling/images/how-it-works-installation-process.png" alt="" fill sizes="760px" className="object-cover object-center [mask-image:linear-gradient(to_left,black_55%,transparent_100%)]" />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#030817_5%,rgba(3,8,23,.82)_48%,rgba(3,8,23,.55)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#030817_5%,rgba(3,8,23,.88)_48%,rgba(3,8,23,.48)_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(56,189,248,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,.8)_1px,transparent_1px)] [background-size:64px_64px]" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[70%] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,.16),transparent_68%)]" />
 
