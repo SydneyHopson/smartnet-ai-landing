@@ -35,7 +35,7 @@ function quantityValue(value: { value: number | null; confidence: string } | und
   return typeof value?.value === "number" ? value.value : null;
 }
 
-function ResumeLoader() {
+function ResumeLoader({ onRestore }: { onRestore: (estimate: MagicLinkEstimate) => void }) {
   const searchParams = useSearchParams();
   const resumeToken = searchParams.get("resumeToken");
   const { hydrateFromMagicLink } = useSmartNetEstimate() as {
@@ -43,9 +43,7 @@ function ResumeLoader() {
   };
 
   React.useEffect(() => {
-    if (!resumeToken) return;
-    if (sessionStorage.getItem("smartnet:resumed")) return;
-    if (!hydrateFromMagicLink) return;
+    if (!resumeToken || !hydrateFromMagicLink) return;
 
     (async () => {
       try {
@@ -53,14 +51,16 @@ function ResumeLoader() {
         const data = await res.json();
 
         if (data.ok && !data.isExpired && data.estimate) {
-          hydrateFromMagicLink(data.estimate as MagicLinkEstimate);
+          const restored = data.estimate as MagicLinkEstimate;
+          hydrateFromMagicLink(restored);
+          onRestore(restored);
           sessionStorage.setItem("smartnet:resumed", "1");
         }
       } catch (err) {
         console.error("[SmartNET] Error loading magic link:", err);
       }
     })();
-  }, [resumeToken, hydrateFromMagicLink]);
+  }, [resumeToken, hydrateFromMagicLink, onRestore]);
 
   return null;
 }
@@ -69,13 +69,18 @@ function HomeShell() {
   const { estimate, estimator } = useSmartNetEstimate();
   const searchParams = useSearchParams();
   const hasResumeToken = !!searchParams.get("resumeToken");
+  const [restoredEstimate, setRestoredEstimate] = React.useState<CalendarEstimate | undefined>();
+
+  const handleRestore = React.useCallback((value: CalendarEstimate) => {
+    setRestoredEstimate(value);
+  }, []);
 
   const calendarEstimate: CalendarEstimate | undefined = React.useMemo(() => {
     const project = estimator.project;
 
-    // No estimator session means this is a true direct booking. Customers can
-    // still schedule onsite, virtual or phone consultations without an estimate.
-    if (!project) return undefined;
+    // A restored magic-link snapshot stays attached until a new estimator
+    // session creates a fresher ProjectEstimate.
+    if (!project) return restoredEstimate;
 
     const projectType = project.property?.projectType ?? estimate.projectType;
     const squareFootage = (project.property?.squareFootage?.value ?? estimate.squareFootage) || undefined;
@@ -101,9 +106,6 @@ function HomeShell() {
       roughLow: typeof pricingLow === "number" && pricingLow > 0 ? pricingLow : estimate.roughLow || undefined,
       roughHigh: typeof pricingHigh === "number" && pricingHigh > 0 ? pricingHigh : estimate.roughHigh || undefined,
       notes: project.assessment?.scopeSummary || project.customerIntent?.summary || estimate.notes || undefined,
-
-      // Preserve the real estimator structure, while adding harmless display
-      // aliases used by the booking UI's legacy helper functions.
       customerIntent: project.customerIntent,
       property: project.property,
       cameras: project.cameras ? { ...project.cameras, cameraCount } : undefined,
@@ -116,17 +118,15 @@ function HomeShell() {
       pricing: project.pricing,
       assessment: project.assessment,
     };
-  }, [estimate, estimator.project]);
+  }, [estimate, estimator.project, restoredEstimate]);
 
   const handleConfirmBooking = React.useCallback(async (_payload: BookingPayload) => {
-    // BookingCalendarSection already persists the booking. Avoid a duplicate
-    // POST here; this callback only clears resume state after success.
     sessionStorage.removeItem("smartnet:resumed");
   }, []);
 
   return (
     <main className="smartnet-shell relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
-      <ResumeLoader />
+      <ResumeLoader onRestore={handleRestore} />
 
       <HeroSection />
       <TrustBar />
@@ -134,10 +134,7 @@ function HomeShell() {
 
       <WalkthroughWarmupSection />
       <section id="booking-calendar" className="border-t border-sky-500/10 bg-[#020617]">
-        <BookingCalendarSection
-          estimate={calendarEstimate}
-          onConfirmBooking={handleConfirmBooking}
-        />
+        <BookingCalendarSection estimate={calendarEstimate} onConfirmBooking={handleConfirmBooking} />
       </section>
 
       <HowItWorksSection />
