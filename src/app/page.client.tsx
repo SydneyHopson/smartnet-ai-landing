@@ -31,6 +31,10 @@ import { Footer } from "@/components/layout/Footer";
 
 type MagicLinkEstimate = CalendarEstimate;
 
+function quantityValue(value: { value: number | null; confidence: string } | undefined): number | null {
+  return typeof value?.value === "number" ? value.value : null;
+}
+
 function ResumeLoader() {
   const searchParams = useSearchParams();
   const resumeToken = searchParams.get("resumeToken");
@@ -41,7 +45,6 @@ function ResumeLoader() {
   React.useEffect(() => {
     if (!resumeToken) return;
     if (sessionStorage.getItem("smartnet:resumed")) return;
-
     if (!hydrateFromMagicLink) return;
 
     (async () => {
@@ -70,14 +73,21 @@ function HomeShell() {
   const calendarEstimate: CalendarEstimate | undefined = React.useMemo(() => {
     const project = estimator.project;
 
-    // No estimator session means this is a true direct booking. The booking
-    // section remains fully usable, including phone consultations.
+    // No estimator session means this is a true direct booking. Customers can
+    // still schedule onsite, virtual or phone consultations without an estimate.
     if (!project) return undefined;
 
     const projectType = project.property?.projectType ?? estimate.projectType;
-    const squareFootage = project.property?.squareFootage?.value ?? estimate.squareFootage || undefined;
+    const squareFootage = (project.property?.squareFootage?.value ?? estimate.squareFootage) || undefined;
     const pricingLow = project.pricing?.estimatedLow;
     const pricingHigh = project.pricing?.estimatedHigh;
+
+    const interiorCameras = quantityValue(project.cameras?.interiorCount) ?? 0;
+    const exteriorCameras = quantityValue(project.cameras?.exteriorCount) ?? 0;
+    const specialtyCameras = quantityValue(project.cameras?.specialtyCount) ?? 0;
+    const cameraCount = interiorCameras + exteriorCameras + specialtyCameras;
+    const apCount = quantityValue(project.wifi?.estimatedAccessPointCount);
+    const doorCount = quantityValue(project.accessControl?.controlledDoorCount);
 
     const focusLabels: string[] = [];
     if (project.cameras?.requested ?? estimate.focus.cameras) focusLabels.push("Cameras");
@@ -92,14 +102,14 @@ function HomeShell() {
       roughHigh: typeof pricingHigh === "number" && pricingHigh > 0 ? pricingHigh : estimate.roughHigh || undefined,
       notes: project.assessment?.scopeSummary || project.customerIntent?.summary || estimate.notes || undefined,
 
-      // Preserve the complete AI project object section-by-section. Booking,
-      // Sanity, magic links and quote resume all receive the same snapshot.
+      // Preserve the real estimator structure, while adding harmless display
+      // aliases used by the booking UI's legacy helper functions.
       customerIntent: project.customerIntent,
       property: project.property,
-      cameras: project.cameras,
+      cameras: project.cameras ? { ...project.cameras, cameraCount } : undefined,
       network: project.network,
-      wifi: project.wifi,
-      accessControl: project.accessControl,
+      wifi: project.wifi ? { ...project.wifi, accessPointCount: apCount } : undefined,
+      accessControl: project.accessControl ? { ...project.accessControl, doorCount } : undefined,
       cabling: project.cabling,
       installation: project.installation,
       equipment: project.equipment,
@@ -109,8 +119,8 @@ function HomeShell() {
   }, [estimate, estimator.project]);
 
   const handleConfirmBooking = React.useCallback(async (_payload: BookingPayload) => {
-    // BookingCalendarSection already persists the booking. This callback is
-    // intentionally local-only so we do not POST the same booking twice.
+    // BookingCalendarSection already persists the booking. Avoid a duplicate
+    // POST here; this callback only clears resume state after success.
     sessionStorage.removeItem("smartnet:resumed");
   }, []);
 
