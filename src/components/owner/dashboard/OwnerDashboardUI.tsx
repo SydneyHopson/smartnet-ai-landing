@@ -14,7 +14,7 @@ export const ownerNavItems=[
  {label:"Jobs",icon:BriefcaseBusiness,href:"/owner/jobs"},
  {label:"Quotes",icon:FileText,href:"/owner/quotes"},
  {label:"Customers",icon:Users,href:"/owner/customers"},
- {label:"Follow-Ups",icon:Clock3},
+ {label:"Follow-Ups",icon:Clock3,href:"/owner/follow-ups"},
  {label:"Reports",icon:BarChart3},
  {label:"Settings",icon:Settings},
 ];
