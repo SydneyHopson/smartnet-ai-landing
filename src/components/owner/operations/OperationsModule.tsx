@@ -1,5 +1,6 @@
 "use client";
 
+// Deployment refresh: Operations module JSX verified after build fix.
 import Link from "next/link";
 import { ArrowLeft, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
