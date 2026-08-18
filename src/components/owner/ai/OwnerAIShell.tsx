@@ -7,6 +7,8 @@ import { Bot, Loader2, Send, Sparkles, X } from "lucide-react";
 type Message = { role: "user" | "assistant"; content: string };
 
 function inferEntity(pathname: string) {
+  const lead = pathname.match(/\/owner\/leads\/([^/]+)/);
+  if (lead) return { entityType: "walkthroughBooking", entityId: lead[1] };
   const booking = pathname.match(/\/owner\/booking\/([^/]+)/);
   if (booking) return { entityType: "walkthroughBooking", entityId: booking[1] };
   const job = pathname.match(/\/owner\/jobs\/([^/]+)/);
