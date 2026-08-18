@@ -1,0 +1,29 @@
+"use client";
+
+import type { ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { BarChart3, BriefcaseBusiness, CalendarDays, Clock3, FileText, LayoutDashboard, Settings, ShieldCheck, Sparkles, Users, UserRoundSearch, Zap } from "lucide-react";
+import { OwnerLogoutButton } from "@/app/owner/access/OwnerLogoutButton";
+
+export const ownerNavItems=[
+ {label:"Dashboard",icon:LayoutDashboard,href:"/owner/dashboard"},
+ {label:"Calendar",icon:CalendarDays,href:"/owner/dashboard/calendar"},
+ {label:"Leads",icon:UserRoundSearch,href:"#leads"},
+ {label:"Walkthroughs",icon:ShieldCheck,href:"/owner/walkthroughs"},
+ {label:"Jobs",icon:BriefcaseBusiness,href:"/owner/jobs"},
+ {label:"Quotes",icon:FileText,href:"/owner/quotes"},
+ {label:"Customers",icon:Users,href:"/owner/customers"},
+ {label:"Follow-Ups",icon:Clock3},
+ {label:"Reports",icon:BarChart3},
+ {label:"Settings",icon:Settings},
+];
+
+export function OwnerBrand(){return <div className="flex items-center justify-center py-1"><Image src="/logos/images/smartnet-installation-logo-2026.png" alt="SmartNET Installation" width={190} height={72} className="h-auto w-[180px] object-contain" priority/></div>}
+export function OwnerNav({onNavigate}:{onNavigate?:()=>void}){return <nav className="space-y-1">{ownerNavItems.map(({label,icon:Icon,href})=>href?<Link key={label} href={href} onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs ${label==="Dashboard"?"border border-blue-400/25 bg-blue-600/25":"text-slate-300 hover:bg-blue-500/10"}`}><Icon className="h-4 w-4"/>{label}</Link>:<div key={label} className="flex items-center gap-3 px-3 py-2.5 text-xs text-slate-600"><Icon className="h-4 w-4"/>{label}</div>)}</nav>}
+export function OwnerSidebar(){return <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] border-r border-blue-400/20 bg-[#020b19]/95 px-4 py-5 backdrop-blur-xl lg:flex lg:flex-col"><OwnerBrand/><div className="mt-5"><OwnerNav/></div><div className="mt-auto space-y-3"><div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[.05] p-3"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-500/10"><Sparkles className="h-4 w-4 text-cyan-200"/></div><div><p className="text-xs font-semibold">SmartNET Admin</p><p className="text-[9px] text-cyan-400">Owner</p></div></div></div><OwnerLogoutButton className="w-full justify-start border-0 bg-transparent text-xs text-slate-400" variant="outline" next="/owner/access"/></div></aside>}
+export function Panel({children,className=""}:{children:ReactNode;className?:string}){return <section className={`rounded-2xl border border-blue-400/15 bg-[#041022] ${className}`}>{children}</section>}
+const tones={blue:"border-blue-400/50 bg-blue-500/10 text-blue-300",cyan:"border-cyan-300/50 bg-cyan-400/10 text-cyan-200",violet:"border-violet-400/50 bg-violet-500/10 text-violet-300",green:"border-emerald-400/50 bg-emerald-500/10 text-emerald-300",amber:"border-amber-300/50 bg-amber-400/10 text-amber-200"};
+export function Metric({label,value,icon,tone,sub}:{label:string;value:string;icon:ReactNode;tone:keyof typeof tones;sub:string}){return <Panel className="p-4"><div className="flex items-center gap-3"><div className={`flex h-14 w-14 items-center justify-center rounded-full border ${tones[tone]} [&>svg]:h-6 [&>svg]:w-6`}>{icon}</div><div><p className="text-[8px] text-slate-400">{label}</p><p className="text-2xl font-semibold">{value}</p><p className="text-[8px] text-emerald-400">▲ {sub}</p></div></div></Panel>}
+export function Stat({label,value}:{label:string;value:string}){return <div className="px-3"><p className="text-[7px] text-slate-600">{label}</p><p className="text-sm font-semibold">{value}</p></div>}
+export function Task({label,value}:{label:string;value:number}){return <div className="flex rounded-xl bg-[#08182d] p-3"><Zap className="mr-3 h-3.5 w-3.5 text-amber-300"/><span className="flex-1 text-[10px]">{label}</span><b>{value}</b></div>}
