@@ -15,7 +15,7 @@ export const ownerNavItems=[
  {label:"Quotes",icon:FileText,href:"/owner/quotes"},
  {label:"Customers",icon:Users,href:"/owner/customers"},
  {label:"Follow-Ups",icon:Clock3,href:"/owner/follow-ups"},
- {label:"Reports",icon:BarChart3},
+ {label:"Reports",icon:BarChart3,href:"/owner/reports"},
  {label:"Settings",icon:Settings},
 ];
 
