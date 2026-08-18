@@ -1,0 +1,12 @@
+import crypto from "crypto";
+
+export type OwnerRole="owner"|"admin"|"sales"|"marketing"|"technician";
+export type OwnerPermission="dashboard"|"leads"|"walkthroughs"|"jobs"|"quotes"|"customers"|"followups"|"reports"|"growth"|"team"|"settings"|"financials";
+export const rolePermissions:Record<OwnerRole,OwnerPermission[]>={owner:["dashboard","leads","walkthroughs","jobs","quotes","customers","followups","reports","growth","team","settings","financials"],admin:["dashboard","leads","walkthroughs","jobs","quotes","customers","followups","reports","growth","team","settings","financials"],sales:["dashboard","leads","walkthroughs","quotes","customers","followups"],marketing:["dashboard","leads","customers","reports","growth"],technician:["dashboard","walkthroughs","jobs","customers"]};
+export type OwnerSession={userId:string;name:string;role:OwnerRole;exp:number};
+const secret=()=>process.env.OWNER_SESSION_SECRET||process.env.OWNER_PASS||"";
+export function createOwnerSession(input:Omit<OwnerSession,"exp">,seconds=60*60*24*7){const payload:OwnerSession={...input,exp:Math.floor(Date.now()/1000)+seconds};const encoded=Buffer.from(JSON.stringify(payload)).toString("base64url");const sig=crypto.createHmac("sha256",secret()).update(encoded).digest("base64url");return`${encoded}.${sig}`}
+export function readOwnerSession(raw?:string|null):OwnerSession|null{if(!raw||!secret())return null;const [encoded,sig]=raw.split(".");if(!encoded||!sig)return null;const expected=crypto.createHmac("sha256",secret()).update(encoded).digest("base64url");if(sig.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))return null;try{const session=JSON.parse(Buffer.from(encoded,"base64url").toString("utf8")) as OwnerSession;if(session.exp<Math.floor(Date.now()/1000))return null;return session}catch{return null}}
+export function can(role:OwnerRole,permission:OwnerPermission){return rolePermissions[role]?.includes(permission)??false}
+export function hashTeamPassword(password:string){const salt=crypto.randomBytes(16).toString("hex");const hash=crypto.scryptSync(password,salt,64).toString("hex");return`${salt}:${hash}`}
+export function verifyTeamPassword(password:string,stored:string){const[salt,hash]=stored.split(":");if(!salt||!hash)return false;const actual=crypto.scryptSync(password,salt,64).toString("hex");return hash.length===actual.length&&crypto.timingSafeEqual(Buffer.from(hash,"hex"),Buffer.from(actual,"hex"))}
