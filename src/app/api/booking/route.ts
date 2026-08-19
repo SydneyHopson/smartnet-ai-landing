@@ -4,8 +4,17 @@ import { resend } from "@/lib/email";
 import { buildIdempotencyKey } from "@/lib/idempotency";
 import {
   buildEstimateSummary,
+  getCoverageProfile,
+  getDoorsAccess,
   getEstimateTotal,
   getPriceRange,
+  getProjectType,
+  getRackLocation,
+  getScopeNotes,
+  getSquareFootage,
+  getTimeline,
+  getWifiLayout,
+  getWiringStyle,
   type SmartNetEstimateSnapshot,
 } from "@/lib/estimate-snapshot";
 
@@ -59,13 +68,38 @@ export async function POST(req: NextRequest) {
 
     const createdAt = new Date();
     const bookingDoc = await sanityWriteClient.createIfNotExists({
-      _id: bookingDocId, _type: "walkthroughBooking", idempotencyKey, status: "new", appointmentType,
-      dateISO: body.dateISO, timeSlot: body.timeSlot,
-      contactName: contact.fullName.trim(), contactEmail: contact.email.trim().toLowerCase(), contactPhone: contact.phone.trim(),
-      locationType: body.jobLocation?.type ?? null, locationLabel: locationTypeLabel, locationNote: body.jobLocation?.note ?? null,
-      needsOnsiteWalkthrough: !isOnsite, isVirtualCall: isVirtual, isPhoneCall: isPhone, hasAiEstimate: Boolean(estimate),
-      estimateSummary, estimateRoughRange: roughRangeLabel, estimateTotal: estimateTotal ?? null,
-      rawEstimateJson: estimate ? JSON.stringify(estimate) : null, createdAt: createdAt.toISOString(),
+      _id: bookingDocId,
+      _type: "walkthroughBooking",
+      idempotencyKey,
+      status: "new",
+      appointmentType,
+      dateISO: body.dateISO,
+      timeSlot: body.timeSlot,
+      contactName: contact.fullName.trim(),
+      contactEmail: contact.email.trim().toLowerCase(),
+      contactPhone: contact.phone.trim(),
+      locationType: body.jobLocation?.type ?? null,
+      locationLabel: locationTypeLabel,
+      locationNote: body.jobLocation?.note ?? null,
+      jobLocationNote: body.jobLocation?.note ?? null,
+      needsOnsiteWalkthrough: !isOnsite,
+      isVirtualCall: isVirtual,
+      isPhoneCall: isPhone,
+      hasAiEstimate: Boolean(estimate),
+      estimateSummary,
+      estimateRoughRange: roughRangeLabel,
+      estimateTotal: estimateTotal ?? null,
+      projectType: getProjectType(estimate),
+      squareFootage: getSquareFootage(estimate),
+      coverageProfile: getCoverageProfile(estimate),
+      wifiLayout: getWifiLayout(estimate),
+      doorsAccess: getDoorsAccess(estimate),
+      wiringStyle: getWiringStyle(estimate),
+      rackLocation: getRackLocation(estimate),
+      timeline: getTimeline(estimate),
+      estimateNotes: getScopeNotes(estimate),
+      rawEstimateJson: estimate ? JSON.stringify(estimate) : null,
+      createdAt: createdAt.toISOString(),
     });
 
     if (alreadyExists) {
@@ -89,7 +123,8 @@ export async function POST(req: NextRequest) {
     let emailError: string | null = null;
     try {
       const result = await resend.emails.send({
-        from: process.env.EMAIL_FROM || "SmartNET <onboarding@resend.dev>", to: recipients,
+        from: process.env.EMAIL_FROM || "SmartNET <onboarding@resend.dev>",
+        to: recipients,
         subject: `New SmartNET ${appointmentType} – ${datePretty} at ${body.timeSlot}`,
         html: `<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;line-height:1.5;"><h2 style="margin-bottom:4px;">New SmartNET Booking</h2><p><strong>${escapeHtml(appointmentType)}</strong> · ${escapeHtml(datePretty)} · ${escapeHtml(body.timeSlot)}</p><p><strong>Client:</strong> ${escapeHtml(contact.fullName)}<br/><strong>Email:</strong> ${escapeHtml(contact.email)}<br/><strong>Phone:</strong> ${escapeHtml(contact.phone)}<br/><strong>Location:</strong> ${escapeHtml(locationTypeLabel)}</p>${body.jobLocation?.note ? `<p><strong>Site notes:</strong> ${escapeHtml(body.jobLocation.note)}</p>` : ""}<hr style="border:none;border-top:1px solid #e2e8f0;margin:18px 0;"/><p><strong>AI estimate:</strong> ${estimate ? "Attached" : "Not completed — direct booking"}<br/><strong>Range:</strong> ${escapeHtml(roughRangeLabel)}<br/><strong>Scope:</strong> ${escapeHtml(estimateSummary)}</p><p style="background:#f1f5f9;padding:12px;border-radius:8px;">${escapeHtml(appointmentGuidance)}</p><p><a href="${ownerBookingUrl}" style="font-weight:700;color:#0369a1;">Open booking record</a></p></div>`,
       });
