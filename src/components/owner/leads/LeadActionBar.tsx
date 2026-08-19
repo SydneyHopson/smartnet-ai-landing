@@ -11,6 +11,9 @@ import {
 type Props = {
   phone: string;
   email: string;
+  onCall: () => void;
+  onText: () => void;
+  onEmail: () => void;
   onWalkthrough: () => void;
   onQuote: () => void;
 };
@@ -21,6 +24,9 @@ const baseActionClass =
 export function LeadActionBar({
   phone,
   email,
+  onCall,
+  onText,
+  onEmail,
   onWalkthrough,
   onQuote,
 }: Props) {
@@ -34,6 +40,7 @@ export function LeadActionBar({
     <div className="mt-4 flex w-full flex-wrap gap-2 sm:gap-3">
       <a
         href={tel}
+        onClick={() => hasPhone && onCall()}
         aria-disabled={!hasPhone}
         className={`${baseActionClass} ${
           hasPhone
@@ -47,6 +54,7 @@ export function LeadActionBar({
 
       <a
         href={sms}
+        onClick={() => hasPhone && onText()}
         aria-disabled={!hasPhone}
         className={`${baseActionClass} ${
           hasPhone
@@ -60,6 +68,7 @@ export function LeadActionBar({
 
       <a
         href={mail}
+        onClick={() => hasEmail && onEmail()}
         aria-disabled={!hasEmail}
         className={`${baseActionClass} ${
           hasEmail
