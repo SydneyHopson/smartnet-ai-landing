@@ -3,8 +3,8 @@ import Image from "next/image";
 export function HeroBrandBar() {
   return (
     <header className="mb-8 flex flex-col gap-6 pb-2 xl:flex-row xl:items-center xl:justify-between">
-      <div className="relative h-20 w-[360px] max-w-full sm:h-24 sm:w-[430px]">
-        <Image src="/hero/images/smartnet-logo-clean-transparent.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 360px, 430px" className="object-contain object-left" />
+      <div className="relative h-24 w-[420px] max-w-full sm:h-28 sm:w-[500px]">
+        <Image src="/hero/images/smartnet-logo-clean-transparent.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 420px, 500px" className="object-contain object-left" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
