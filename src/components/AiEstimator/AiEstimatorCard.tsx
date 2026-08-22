@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
-  LockKeyhole,
   Sparkles,
   Wifi,
 } from "lucide-react";
@@ -94,8 +93,7 @@ export function AiEstimatorCard({
 
   const selectedSystemCount =
     Number(estimate.focus.cameras) +
-    Number(estimate.focus.wifi) +
-    Number(estimate.focus.accessControl);
+    Number(estimate.focus.wifi);
 
   const clearErrorWhenPresent = () => {
     if (estimator.error) {
@@ -296,14 +294,6 @@ export function AiEstimatorCard({
                     active={estimate.focus.wifi}
                     onClick={() => toggleFocus("wifi")}
                   />
-
-                  <SystemChoice
-                    icon={<LockKeyhole className="h-5 w-5" />}
-                    title="Access Control"
-                    description="Badges, key fobs, controlled doors, and remote management."
-                    active={estimate.focus.accessControl}
-                    onClick={() => toggleFocus("accessControl")}
-                  />
                 </div>
 
                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -339,12 +329,12 @@ export function AiEstimatorCard({
                     clearErrorWhenPresent();
                   }}
                   rows={7}
-                  placeholder="Example: I have a 12,000 square foot warehouse with 24-foot ceilings. We need 18 indoor cameras, 6 outdoor cameras, Wi-Fi for about 85 devices, Comcast Business internet, and badge access on six doors."
+                  placeholder="Example: I have a 12,000 square foot warehouse with 24-foot ceilings. We need 18 indoor cameras, 6 outdoor cameras, Wi-Fi for about 85 devices, Comcast Business internet, and Cat6 cabling for the network equipment."
                   className="min-h-[190px] w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-4 text-sm leading-relaxed text-white outline-none placeholder:text-slate-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15"
                 />
 
                 <div className="mt-3 rounded-xl border border-blue-500/15 bg-blue-500/5 px-4 py-3 text-xs leading-relaxed text-slate-400">
-                  SmartNET can recognize property type, quantities, providers, camera brands, networking equipment, cabling, ceilings, doors, and other project details.
+                  SmartNET can recognize property type, quantities, providers, camera brands, networking equipment, cabling, ceilings, and other project details.
                 </div>
 
                 {estimator.error && (
@@ -653,8 +643,6 @@ function KnownDetails() {
     (project.cameras?.specialtyCount?.value ?? 0);
   const wifiUsers =
     project.wifi?.estimatedConcurrentUsers?.value;
-  const doors =
-    project.accessControl?.controlledDoorCount?.value;
 
   if (projectType) {
     details.push(formatLabel(projectType));
@@ -678,10 +666,6 @@ function KnownDetails() {
 
   if (wifiUsers) {
     details.push(`${wifiUsers} concurrent Wi-Fi devices`);
-  }
-
-  if (doors) {
-    details.push(`${doors} controlled doors`);
   }
 
   if (details.length === 0) {
