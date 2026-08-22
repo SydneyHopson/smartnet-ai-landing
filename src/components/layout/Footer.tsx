@@ -17,14 +17,13 @@ export function Footer() {
       <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_.7fr_.9fr]">
           <div className="max-w-xl">
-            <div className="relative h-24 w-[280px] max-w-full">
-              <div className="pointer-events-none absolute inset-4 rounded-full bg-sky-500/10 blur-2xl" />
+            <div className="relative h-24 w-[400px] max-w-full sm:h-28 sm:w-[460px]">
               <Image
-                src="/hero/images/smartnet-logo.png"
+                src="/hero/images/smartnet-logo-clean-transparent.png"
                 alt="SmartNET Installation LLC"
                 fill
-                sizes="280px"
-                className="relative object-contain object-left drop-shadow-[0_0_18px_rgba(56,189,248,.3)]"
+                sizes="(max-width: 640px) 400px, 460px"
+                className="object-contain object-left"
               />
             </div>
             <p className="mt-4 max-w-lg text-sm leading-6 text-slate-400">AI-assisted project planning and professional low-voltage installation for security cameras, Wi-Fi, networking, access control and structured cabling.</p>
