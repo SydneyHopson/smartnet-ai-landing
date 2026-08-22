@@ -2,9 +2,9 @@ import Image from "next/image";
 
 export function HeroBrandBar() {
   return (
-    <header className="mb-12 flex flex-col gap-8 border-b border-sky-500/15 pb-8 xl:flex-row xl:items-center xl:justify-between">
-      <div className="relative h-24 w-[320px] max-w-full sm:h-28 sm:w-[380px]">
-        <Image src="/hero/images/smartnet-logo-original-refresh.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 320px, 380px" className="object-contain object-left" />
+    <header className="mb-8 flex flex-col gap-6 pb-2 xl:flex-row xl:items-center xl:justify-between">
+      <div className="relative h-28 w-[300px] max-w-full overflow-hidden sm:h-32 sm:w-[340px]">
+        <Image src="/hero/images/smartnet-logo-original-refresh.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 300px, 340px" className="scale-[3.1] object-contain object-center" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
