@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { Menu, Phone, X } from "lucide-react";
 
 const navItems = [
@@ -34,15 +33,11 @@ export function SiteNavigation() {
     <header className="sticky top-0 z-[80] border-b border-sky-400/10 bg-[#020617]/88 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <button onClick={() => goTo("#top")} className="group flex shrink-0 items-center text-left" aria-label="SmartNET home">
-          <span className="relative block h-12 w-[150px] sm:w-[178px]">
-            <span className="pointer-events-none absolute inset-2 rounded-full bg-sky-400/10 blur-xl transition group-hover:bg-sky-400/20" />
-            <Image
-              src="/logos/images/smartnet-installation-logo-2026.png"
-              alt="SmartNET Installation LLC"
-              fill
-              sizes="178px"
-              className="relative object-contain object-left drop-shadow-[0_0_12px_rgba(56,189,248,.28)]"
-            />
+          <span className="text-lg font-black tracking-tight text-white sm:text-xl">
+            Smart<span className="text-sky-400">NET</span>
+          </span>
+          <span className="ml-2 hidden text-[0.58rem] font-bold uppercase tracking-[0.16em] text-slate-500 sm:inline">
+            Installation LLC
           </span>
         </button>
 
