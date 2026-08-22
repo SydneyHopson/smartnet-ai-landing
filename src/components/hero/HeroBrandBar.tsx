@@ -4,8 +4,7 @@ export function HeroBrandBar() {
   return (
     <header className="mb-12 flex flex-col gap-8 border-b border-sky-500/15 pb-8 xl:flex-row xl:items-center xl:justify-between">
       <div className="relative h-24 w-[320px] max-w-full sm:h-28 sm:w-[380px]">
-        <div className="pointer-events-none absolute inset-5 rounded-full bg-sky-500/15 blur-3xl" />
-        <Image src="/hero/images/smartnet-logo.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 320px, 380px" className="relative object-contain object-left drop-shadow-[0_0_24px_rgba(56,189,248,.45)]" />
+        <Image src="/hero/images/smartnet-logo-original-refresh.png" alt="SmartNET Installation LLC" fill priority sizes="(max-width: 640px) 320px, 380px" className="object-contain object-left" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
