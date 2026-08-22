@@ -51,7 +51,7 @@ export function HeroSection() {
             <div className="relative flex min-h-[650px] items-center justify-center xl:min-h-[720px]">
               <div className="relative w-[118%] max-w-none sm:w-[114%] lg:w-[110%] xl:-ml-[7%] xl:w-[138%] 2xl:-ml-[10%] 2xl:w-[145%]">
                 <div className="pointer-events-none absolute inset-[6%] rounded-full bg-sky-500/25 blur-[115px]" />
-                <div className="relative aspect-[4/3] w-full"><Image src="/hero/images/smartnet-ai-building-v3.png" alt="SmartNET AI holographic low-voltage building blueprint" fill priority loading="eager" sizes="(max-width: 767px) 118vw, (max-width: 1279px) 76vw, 78vw" className="object-contain drop-shadow-[0_0_75px_rgba(37,99,235,.72)]" /></div>
+                <div className="relative aspect-[4/3] w-full"><Image src="/hero/images/smartnet-ai-building-v4.png" alt="SmartNET AI holographic low-voltage building blueprint" fill priority loading="eager" sizes="(max-width: 767px) 118vw, (max-width: 1279px) 76vw, 78vw" className="object-contain drop-shadow-[0_0_75px_rgba(37,99,235,.72)]" /></div>
               </div>
             </div>
 
