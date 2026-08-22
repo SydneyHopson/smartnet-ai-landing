@@ -20,7 +20,7 @@ export function Footer() {
             <div className="relative h-24 w-[280px] max-w-full">
               <div className="pointer-events-none absolute inset-4 rounded-full bg-sky-500/10 blur-2xl" />
               <Image
-                src="/logos/images/smartnet-installation-logo-2026.png"
+                src="/hero/images/smartnet-logo.png"
                 alt="SmartNET Installation LLC"
                 fill
                 sizes="280px"
