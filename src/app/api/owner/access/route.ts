@@ -1,7 +1,154 @@
 import { NextResponse } from "next/server";
 import { sanityWriteClient } from "@/lib/sanityWriteClient";
-import { createOwnerSession, verifyTeamPassword, type OwnerRole } from "@/lib/owner/ownerSession";
+import {
+  createOwnerSession,
+  verifyTeamPassword,
+  type OwnerRole,
+} from "@/lib/owner/ownerSession";
 
-const COOKIE_NAME="smartnet_owner_authed";const SESSION_COOKIE="smartnet_owner_session";type Bucket={count:number;resetAt:number};const buckets=new Map<string,Bucket>();
-function ip(req:Request){const x=req.headers.get("x-forwarded-for");return x?.split(",")[0]?.trim()||req.headers.get("x-real-ip")?.trim()||"unknown"}function limit(key:string,max=12,ms=60000){const now=Date.now(),b=buckets.get(key);if(!b||now>b.resetAt){buckets.set(key,{count:1,resetAt:now+ms});return true}b.count++;return b.count<=max}function safeEqual(a:string,b:string){if(a.length!==b.length)return false;let out=0;for(let i=0;i<a.length;i++)out|=a.charCodeAt(i)^b.charCodeAt(i);return out===0}
-export async function POST(req:Request){try{if(!limit(ip(req)))return NextResponse.json({ok:false,error:"Too many attempts. Try again shortly."},{status:429});const body=await req.json().catch(()=>null) as{user?:string;pass?:string}|null;const user=(body?.user||"").trim(),pass=body?.pass||"";if(!user||!pass)return NextResponse.json({ok:false},{status:401});let session:{userId:string;name:string;role:OwnerRole}|null=null;const ownerUser=process.env.OWNER_USER||"",ownerPass=process.env.OWNER_PASS||"";if(ownerUser&&ownerPass&&safeEqual(user,ownerUser)&&safeEqual(pass,ownerPass)){session={userId:"owner",name:"SmartNET Owner",role:"owner"}}else{const member=await sanityWriteClient.fetch<{_id:string;name?:string;email?:string;username?:string;role?:OwnerRole;passwordHash?:string;active?:boolean}|null>(`*[_type=="smartnetTeamMember" && active==true && (lower(email)==lower($user) || lower(username)==lower($user))][0]{_id,name,email,username,role,passwordHash,active}`,{user});if(member?.passwordHash&&verifyTeamPassword(pass,member.passwordHash))session={userId:member._id,name:member.name||member.email||user,role:member.role||"sales"}}if(!session)return NextResponse.json({ok:false},{status:401});const res=NextResponse.json({ok:true,role:session.role,name:session.name});const opts={httpOnly:true,sameSite:"lax" as const,secure:process.env.NODE_ENV==="production",path:"/",maxAge:60*60*24*7};res.cookies.set(COOKIE_NAME,"1",opts);res.cookies.set(SESSION_COOKIE,createOwnerSession(session),opts);return res}catch(e){console.error("[owner access]",e);return NextResponse.json({ok:false},{status:400})}}
+const COOKIE_NAME = "smartnet_owner_authed";
+const SESSION_COOKIE = "smartnet_owner_session";
+
+type Bucket = { count: number; resetAt: number };
+const buckets = new Map<string, Bucket>();
+
+function ip(req: Request) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  return (
+    forwarded?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
+
+function limit(key: string, max = 12, ms = 60_000) {
+  const now = Date.now();
+  const bucket = buckets.get(key);
+
+  if (!bucket || now > bucket.resetAt) {
+    buckets.set(key, { count: 1, resetAt: now + ms });
+    return true;
+  }
+
+  bucket.count++;
+  return bucket.count <= max;
+}
+
+function safeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+
+  let out = 0;
+  for (let i = 0; i < a.length; i++) {
+    out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return out === 0;
+}
+
+export async function POST(req: Request) {
+  try {
+    if (!limit(ip(req))) {
+      return NextResponse.json(
+        { ok: false, error: "Too many attempts. Try again shortly." },
+        { status: 429 }
+      );
+    }
+
+    const body = (await req.json().catch(() => null)) as {
+      user?: string;
+      pass?: string;
+    } | null;
+
+    const user = (body?.user || "").trim();
+    const pass = body?.pass || "";
+
+    if (!user || !pass) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    let session: {
+      userId: string;
+      name: string;
+      role: OwnerRole;
+    } | null = null;
+
+    const ownerUser = process.env.OWNER_USER || "";
+    const ownerPass = process.env.OWNER_PASS || "";
+
+    if (
+      ownerUser &&
+      ownerPass &&
+      safeEqual(user, ownerUser) &&
+      safeEqual(pass, ownerPass)
+    ) {
+      session = {
+        userId: "owner",
+        name: "SmartNET Owner",
+        role: "owner",
+      };
+    } else {
+      const member = await sanityWriteClient.fetch<{
+        _id: string;
+        name?: string;
+        email?: string;
+        username?: string;
+        role?: OwnerRole;
+        passwordHash?: string;
+        active?: boolean;
+      } | null>(
+        `*[_type=="smartnetTeamMember" && active==true && (lower(email)==lower($user) || lower(username)==lower($user))][0]{_id,name,email,username,role,passwordHash,active}`,
+        { user }
+      );
+
+      if (member?.passwordHash && verifyTeamPassword(pass, member.passwordHash)) {
+        session = {
+          userId: member._id,
+          name: member.name || member.email || user,
+          role: member.role || "sales",
+        };
+      }
+    }
+
+    if (!session) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const res = NextResponse.json({
+      ok: true,
+      role: session.role,
+      name: session.name,
+    });
+
+    const opts = {
+      httpOnly: true,
+      sameSite: "lax" as const,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    };
+
+    res.cookies.set(COOKIE_NAME, "1", opts);
+    res.cookies.set(SESSION_COOKIE, createOwnerSession(session), opts);
+    return res;
+  } catch (error) {
+    console.error("[owner access]", error);
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+}
+
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+
+  const opts = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  };
+
+  res.cookies.set(COOKIE_NAME, "", opts);
+  res.cookies.set(SESSION_COOKIE, "", opts);
+
+  return res;
+}
