@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Props = {
-  next?: string; // where to go after logout
+  next?: string;
   className?: string;
   variant?: React.ComponentProps<typeof Button>["variant"];
 };
@@ -21,11 +21,16 @@ export function OwnerLogoutButton({
   async function logout() {
     try {
       setLoading(true);
-      await fetch("/api/owner/access", { method: "DELETE" }); // clears cookie
-    } finally {
-      // hard refresh so middleware re-checks cookie immediately
+      const response = await fetch("/api/owner/access", { method: "DELETE" });
+
+      if (!response.ok) {
+        throw new Error("Unable to sign out");
+      }
+
       router.replace(next);
       router.refresh();
+    } catch (error) {
+      console.error("[owner logout]", error);
       setLoading(false);
     }
   }
